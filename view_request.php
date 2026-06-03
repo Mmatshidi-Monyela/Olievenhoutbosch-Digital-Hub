@@ -405,6 +405,30 @@ function timeAgo($datetime) {
             padding: 15px;
             margin-top: 15px;
         }
+
+        /* ===== OPTION B FIX #3: Product type display styling ===== */
+        .product-type-badge {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .service-type-badge {
+            background: #e3f2fd;
+            color: #0d47a1;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -428,7 +452,20 @@ function timeAgo($datetime) {
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
                             <h2 class="fw-bold mb-1" style="color: var(--plum);"><?php echo htmlspecialchars($request['listing_name'] ?? 'Unknown'); ?></h2>
-                            <p class="text-muted small"><?php echo htmlspecialchars($request['category'] ?? ''); ?> &bull; <?php echo htmlspecialchars($request['service_type'] ?? ''); ?></p>
+                            
+                            <!-- ===== OPTION B FIX #1: Meta line shows correct type(s) ===== -->
+                            <p class="text-muted small">
+                                <?php echo htmlspecialchars($request['category'] ?? ''); ?> &bull; 
+                                <?php 
+                                if ($request['listing_type'] == 'both') {
+                                    echo htmlspecialchars($request['service_type'] ?? '') . ' / ' . htmlspecialchars($request['product_type'] ?? '');
+                                } elseif ($request['listing_type'] == 'product') {
+                                    echo htmlspecialchars($request['product_type'] ?? '');
+                                } else {
+                                    echo htmlspecialchars($request['service_type'] ?? '');
+                                }
+                                ?>
+                            </p>                          
                             <span class="type-badge"><?php echo $type_label; ?></span>
                         </div>
                         <span class="status-badge">Status: <?php echo htmlspecialchars($request['verification_status'] ?? 'Unknown'); ?></span>
@@ -454,6 +491,21 @@ function timeAgo($datetime) {
                         </p>
                         <p class="small"><strong>Pricing:</strong> <span class="text-danger"><?php echo htmlspecialchars($request['price_description'] ?? 'Not specified'); ?></span></p>
                     </div>
+
+                    <!-- ===== OPTION B FIX #2: Show Service Type & Product Type when applicable ===== -->
+                    <?php if (!empty($request['service_type']) && ($request['listing_type'] == 'service' || $request['listing_type'] == 'both')): ?>
+                    <div class="mb-3">
+                        <h6 class="fw-bold small mb-2" style="color: var(--plum);">Service Type</h6>
+                        <span class="service-type-badge"><?php echo htmlspecialchars($request['service_type']); ?></span>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($request['product_type']) && ($request['listing_type'] == 'product' || $request['listing_type'] == 'both')): ?>
+                    <div class="mb-3">
+                        <h6 class="fw-bold small mb-2" style="color: var(--plum);">Product Type</h6>
+                        <span class="product-type-badge"><?php echo htmlspecialchars($request['product_type']); ?></span>
+                    </div>
+                    <?php endif; ?>
 
                     <div class="mb-3">
                         <h6 class="fw-bold small mb-2" style="color: var(--plum);">Payment Options</h6>

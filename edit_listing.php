@@ -353,15 +353,15 @@ unset($_SESSION['error_msg']);
                     <label class="form-label">What are you offering?</label>
                     <div class="payment-checkboxes">
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="listing_type" id="typeService" value="service" <?php if($listing['listing_type']=='service') echo 'checked'; ?> onchange="updateDeliveryOptions()">
+                            <input class="form-check-input" type="radio" name="listing_type" id="typeService" value="service" <?php if($listing['listing_type']=='service') echo 'checked'; ?> onchange="updateFormFields()">
                             <label class="form-check-label" for="typeService">Service (I do work)</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="listing_type" id="typeProduct" value="product" <?php if($listing['listing_type']=='product') echo 'checked'; ?> onchange="updateDeliveryOptions()">
+                            <input class="form-check-input" type="radio" name="listing_type" id="typeProduct" value="product" <?php if($listing['listing_type']=='product') echo 'checked'; ?> onchange="updateFormFields()">
                             <label class="form-check-label" for="typeProduct">Goods (I sell items)</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="listing_type" id="typeBoth" value="both" <?php if($listing['listing_type']=='both') echo 'checked'; ?> onchange="updateDeliveryOptions()">
+                            <input class="form-check-input" type="radio" name="listing_type" id="typeBoth" value="both" <?php if($listing['listing_type']=='both') echo 'checked'; ?> onchange="updateFormFields()">
                             <label class="form-check-label" for="typeBoth">Both</label>
                         </div>
                     </div>
@@ -376,10 +376,18 @@ unset($_SESSION['error_msg']);
                         <option value="Personal Care" <?php if($listing['category']=='Personal Care') echo 'selected'; ?>>Personal Care</option>
                     </select>
 
-                    <label class="form-label">Service / Product Type</label>
-                    <select name="service_type" class="form-select" id="serviceType" required>
-                        <option value="">Select Type...</option>
-                    </select>
+                    <!-- ===== OPTION B FIX #1: Separate Service Type & Product Type fields ===== -->
+                    <div id="serviceTypeSection">
+                        <label class="form-label">Service Type</label>
+                        <select name="service_type" class="form-select" id="serviceType">
+                            <option value="">Select Service Type...</option>
+                        </select>
+                    </div>
+
+                    <div id="productTypeSection">
+                        <label class="form-label">Product Type</label>
+                        <input type="text" name="product_type" class="form-control" id="productType" value="<?php echo htmlspecialchars($listing['product_type'] ?? ''); ?>" placeholder="e.g. Handmade jewelry, Second-hand clothes...">
+                    </div>
 
                     <!-- LOCATION -->
                     <div class="section-divider"></div>
@@ -559,12 +567,42 @@ const deliveryOptions = {
 let currentListingType = '<?php echo $listing['listing_type'] ?? 'service'; ?>';
 let activeDeliveryModes = selectedDeliveryModes.length > 0 ? [...selectedDeliveryModes] : ['door_to_door'];
 
+// ===== OPTION B FIX #2: Show/hide service_type & product_type based on listing_type =====
+function updateFormFields() {
+    const listingType = document.querySelector('input[name="listing_type"]:checked').value;
+    currentListingType = listingType;
+    const serviceSection = document.getElementById('serviceTypeSection');
+    const productSection = document.getElementById('productTypeSection');
+    const serviceSelect = document.getElementById('serviceType');
+    const productInput = document.getElementById('productType');
+
+    if (listingType === 'service') {
+        serviceSection.style.display = 'block';
+        productSection.style.display = 'none';
+        serviceSelect.required = true;
+        productInput.required = false;
+    } else if (listingType === 'product') {
+        serviceSection.style.display = 'none';
+        productSection.style.display = 'block';
+        serviceSelect.required = false;
+        productInput.required = true;
+    } else if (listingType === 'both') {
+        serviceSection.style.display = 'block';
+        productSection.style.display = 'block';
+        serviceSelect.required = true;
+        productInput.required = true;
+    }
+
+    updateServiceTypes();
+    updateDeliveryOptions();
+}
+
 function updateServiceTypes() {
     const cat = document.getElementById("mainCategory").value;
     const sel = document.getElementById("serviceType");
     const currentType = "<?php echo $listing['service_type']; ?>";
 
-    sel.innerHTML = '<option value="">Select Type...</option>';
+    sel.innerHTML = '<option value="">Select Service Type...</option>';
     if (services[cat]) {
         services[cat].forEach(type => {
             let option = new Option(type, type);
@@ -580,6 +618,9 @@ function updateDeliveryOptions() {
     const container = document.getElementById("deliveryOptionsContainer");
     const options = deliveryOptions[listingType] || deliveryOptions.service;
 
+    document.getElementById("deliverySectionTitle").textContent = options.title;
+    document.getElementById("addressHint").textContent = options.hint;
+
     if (listingType === 'both') {
         container.innerHTML = options.map(opt => {
             const isSelected = selectedDeliveryModes.includes(opt.value);
@@ -594,7 +635,6 @@ function updateDeliveryOptions() {
             `;
         }).join('');
 
-        // Ensure at least one is selected if none match
         if (activeDeliveryModes.length === 0 || !activeDeliveryModes.some(m => options.find(o => o.value === m))) {
             activeDeliveryModes = [options[0].value];
             const firstOpt = container.querySelector('.delivery-option');
@@ -748,11 +788,28 @@ function updateNewInput() {
     document.getElementById('newPhotosInput').files = dt.files;
 }
 
+// ===== OPTION B FIX #3: Validation & submit handling =====
 document.querySelector('form').onsubmit = function() {
     if (currentListingType !== 'both') {
         const selectedDelivery = document.querySelector('input[name="delivery_mode_radio"]:checked');
         if (selectedDelivery) {
             document.getElementById("deliveryModeInput").value = selectedDelivery.value;
+        }
+    }
+
+    // Validate based on listing type
+    if (currentListingType === 'service' || currentListingType === 'both') {
+        const serviceType = document.getElementById('serviceType').value;
+        if (!serviceType) {
+            alert('Please select a service type.');
+            return false;
+        }
+    }
+    if (currentListingType === 'product' || currentListingType === 'both') {
+        const productType = document.getElementById('productType').value.trim();
+        if (!productType) {
+            alert('Please enter a product type.');
+            return false;
         }
     }
 
@@ -762,9 +819,8 @@ document.querySelector('form').onsubmit = function() {
 };
 
 // Initialize on page load
-updateServiceTypes();
+updateFormFields();
 updateAdditionalExtOptions();
-updateDeliveryOptions();
 </script>
 
 </body>

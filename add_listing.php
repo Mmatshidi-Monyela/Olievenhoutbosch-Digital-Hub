@@ -314,23 +314,34 @@ if (!in_array($user_role, ['Provider', 'Both'])) {
                 <label class="form-label">What are you offering?</label>
                 <div class="type-selector">
                     <div class="type-option selected" onclick="selectType(this, 'service')">
-                        <input type="radio" name="listing_type" id="typeService" value="service" checked onchange="updateDeliveryOptions()">
-                        <i class="bi bi-tools"></i>
+                        <input type="radio" name="listing_type" id="typeService" value="service" checked onchange="updateFormFields()">
                         <strong>Service</strong>
                         <span>I do work</span>
                     </div>
                     <div class="type-option" onclick="selectType(this, 'product')">
-                        <input type="radio" name="listing_type" id="typeProduct" value="product" onchange="updateDeliveryOptions()">
-                        <i class="bi bi-box-seam"></i>
+                        <input type="radio" name="listing_type" id="typeProduct" value="product" onchange="updateFormFields()">
                         <strong>Goods</strong>
                         <span>I sell items</span>
                     </div>
                     <div class="type-option" onclick="selectType(this, 'both')">
-                        <input type="radio" name="listing_type" id="typeBoth" value="both" onchange="updateDeliveryOptions()">
-                        <i class="bi bi-grid"></i>
+                        <input type="radio" name="listing_type" id="typeBoth" value="both" onchange="updateFormFields()">
                         <strong>Both</strong>
                         <span>I do both</span>
                     </div>
+                </div>
+
+                <!-- Service Type (dropdown) -->
+                <div id="serviceTypeSection">
+                    <label class="form-label">Service Type</label>
+                    <select name="service_type" class="form-select" id="serviceType">
+                        <option value="">Select Service Type...</option>
+                    </select>
+                </div>
+
+                <!-- Product Type (free-form text) -->
+                <div id="productTypeSection" style="display: none;">
+                    <label class="form-label">Product Type</label>
+                    <input type="text" name="product_type" class="form-control" id="productType" placeholder="e.g. Handmade jewelry, Second-hand clothes, Homemade snacks...">
                 </div>
 
                 <label class="form-label">Main Category</label>
@@ -498,25 +509,55 @@ function selectType(element, value) {
     element.classList.add('selected');
     element.querySelector('input').checked = true;
     currentListingType = value;
-    updateDeliveryOptions();
+    updateFormFields();
+}
 
-    // Update label text
-    const label = document.getElementById('serviceTypeLabel');
-    if (value === 'service') {
-        label.textContent = 'Service Type';
-    } else if (value === 'product') {
-        label.textContent = 'Product Type';
-    } else {
-        label.textContent = 'Service / Product Type';
+function updateFormFields() {
+    const listingType = document.querySelector('input[name="listing_type"]:checked').value;
+    const serviceSection = document.getElementById('serviceTypeSection');
+    const productSection = document.getElementById('productTypeSection');
+    const serviceSelect = document.getElementById('serviceType');
+    const productInput = document.getElementById('productType');
+
+    // Reset fields
+    serviceSelect.innerHTML = '<option value="">Select Service Type...</option>';
+    productInput.value = '';
+
+    if (listingType === 'service') {
+        serviceSection.style.display = 'block';
+        productSection.style.display = 'none';
+        serviceSelect.required = true;
+        productInput.required = false;
+        // Populate with category options
+        updateServiceTypes();
+    } else if (listingType === 'product') {
+        serviceSection.style.display = 'none';
+        productSection.style.display = 'block';
+        serviceSelect.required = false;
+        productInput.required = true;
+    } else if (listingType === 'both') {
+        serviceSection.style.display = 'block';
+        productSection.style.display = 'block';
+        serviceSelect.required = true;
+        productInput.required = true;
+        updateServiceTypes();
     }
+
+    updateDeliveryOptions();
 }
 
 function updateServiceTypes() {
     const cat = document.getElementById("mainCategory").value;
     const sel = document.getElementById("serviceType");
-    sel.innerHTML = '<option value="">Select Type...</option>';
+    // Keep current selection if possible
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="">Select Service Type...</option>';
     if (services[cat]) {
-        services[cat].forEach(t => sel.add(new Option(t, t)));
+        services[cat].forEach(t => {
+            const opt = new Option(t, t);
+            if (t === currentVal) opt.selected = true;
+            sel.add(opt);
+        });
     }
 }
 
@@ -527,7 +568,6 @@ function updateDeliveryOptions() {
     const container = document.getElementById("deliveryOptionsContainer");
     const options = config.options;
 
-    // Update section title
     document.getElementById("deliverySectionTitle").textContent = config.title;
     document.getElementById("addressHint").textContent = config.hint;
 
@@ -586,7 +626,6 @@ function toggleDeliveryMulti(element, value) {
 
     document.getElementById("deliveryModeInput").value = selectedDeliveryModes.join(',');
     document.getElementById("deliveryModesArray").value = selectedDeliveryModes.join(',');
-
     toggleAddress();
 }
 
@@ -680,6 +719,23 @@ document.getElementById('listingForm').onsubmit = function() {
         }
     }
 
+    // Validation based on listing type
+    const listingType = document.querySelector('input[name="listing_type"]:checked').value;
+    if (listingType === 'service' || listingType === 'both') {
+        const serviceType = document.getElementById('serviceType').value;
+        if (!serviceType) {
+            alert('Please select a service type.');
+            return false;
+        }
+    }
+    if (listingType === 'product' || listingType === 'both') {
+        const productType = document.getElementById('productType').value.trim();
+        if (!productType) {
+            alert('Please enter a product type.');
+            return false;
+        }
+    }
+
     updateInput();
     document.getElementById('submitBtn').innerHTML = "Creating...";
     document.getElementById('submitBtn').disabled = true;
@@ -692,7 +748,7 @@ document.getElementById('cancelBtn').onclick = function() {
 };
 
 // Initialize
-updateDeliveryOptions();
+updateFormFields();
 </script>
 
 </body>

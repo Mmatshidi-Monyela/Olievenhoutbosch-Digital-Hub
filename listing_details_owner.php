@@ -261,8 +261,6 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
             border: none;
         }
 
-        /* REMOVED: .business-image style no longer needed */
-
         .stat-box {
             background: #fdfaf9;
             border: 1px solid var(--rose-gold);
@@ -296,7 +294,6 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
         }
         .btn-edit:hover { background-color: var(--rose-gold); color: var(--plum); }
 
-        /* Delete Button */
         .btn-delete-listing {
             background-color: #ffe5e5;
             color: #d9534f;
@@ -359,7 +356,6 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
             font-size: 0.9rem;
         }
 
-        /* Danger zone card */
         .danger-zone {
             border: 2px solid #f8d7da;
             border-radius: 15px;
@@ -377,7 +373,6 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
             margin-bottom: 15px;
         }
 
-        /* NEW: Gallery styles only */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -424,7 +419,6 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
             border-color: var(--copper);
         }
 
-        /* Extension tags */
         .ext-list {
             display: flex;
             flex-wrap: wrap;
@@ -444,7 +438,6 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
             color: white;
         }
 
-        /* Comment rating stars */
         .comment-rating {
             color: #ffc107;
             font-size: 0.85rem;
@@ -484,7 +477,6 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
             display: inline-block;
         }
 
-        /* Average rating display */
         .avg-rating-display {
             background: var(--plum);
             color: white;
@@ -507,20 +499,30 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
             font-size: 0.9rem;
             opacity: 0.9;
         }
+
+        /* NEW: Product type display styling */
+        .product-type-display {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark navbar-custom sticky-top">
+<<nav class="navbar navbar-dark navbar-custom sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center ms-2" href="listing_dashboard.php">
             <img src="images/logo.png" width="28" height="28" alt="logo" class="me-2">
             <span class="brand-text fw-bold text-white">Olievenhoutbosch Digital Hub</span>
         </a>
-
-        <a href="listing_dashboard.php" class="back-link">
-            Back
-        </a>
+        <a href="listing_dashboard.php" class="back-link">Back</a>
     </div>
 </nav>
 
@@ -529,12 +531,24 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
         <!-- Main Details Column -->
         <div class="col-lg-8">
             <div class="management-card">
-                <!-- REMOVED: <img> hero image line -->
-
                 <div class="d-flex justify-content-between align-items-start mb-4">
                     <div>
-                        <h2 style="color: var(--plum); font-weight: bold; margin-bottom: 5px;"><?php echo $listing['listing_name']; ?></h2>
-                        <p class="text-muted mb-1"><?php echo $listing['category']; ?> &bull; <?php echo $listing['service_type']; ?></p>
+                        <h2 style="color: var(--plum); font-weight: bold; margin-bottom: 5px;"><?php echo htmlspecialchars($listing['listing_name']); ?></h2>
+                        
+                        <!-- ===== OPTION B FIX #1: Meta line shows correct type(s) ===== -->
+                        <p class="text-muted mb-1">
+                            <?php echo htmlspecialchars($listing['category']); ?> &bull; 
+                            <?php 
+                            if ($listing['listing_type'] == 'both') {
+                                echo htmlspecialchars($listing['service_type']) . ' / ' . htmlspecialchars($listing['product_type']);
+                            } elseif ($listing['listing_type'] == 'product') {
+                                echo htmlspecialchars($listing['product_type']);
+                            } else {
+                                echo htmlspecialchars($listing['service_type']);
+                            }
+                            ?>
+                        </p>
+                        
                         <span class="type-badge"><?php echo $type_label; ?></span>
                         <div class="ext-list">
                             <?php foreach ($all_extensions as $idx => $ext): ?>
@@ -550,9 +564,25 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
                 <hr class="mb-4">
 
                 <h5 class="fw-bold" style="color: var(--plum);">Description</h5>
-                <p class="text-secondary"><?php echo $listing['description']; ?></p>
+                <p class="text-secondary"><?php echo nl2br(htmlspecialchars($listing['description'])); ?></p>
 
-                <p class="mb-1"><strong>Pricing:</strong> <span style="color: var(--plum);"><?php echo $listing['price_description']; ?></span></p>
+                <!-- ===== OPTION B FIX #2: Show Product Type when applicable ===== -->
+                <?php if (!empty($listing['product_type']) && ($listing['listing_type'] == 'product' || $listing['listing_type'] == 'both')): ?>
+                <div class="mb-3">
+                    <strong class="small" style="color: var(--plum);">Product Type:</strong>
+                    <span class="product-type-display"><?php echo htmlspecialchars($listing['product_type']); ?></span>
+                </div>
+                <?php endif; ?>
+
+                <!-- ===== OPTION B FIX #3: Show Service Type when applicable ===== -->
+                <?php if (!empty($listing['service_type']) && ($listing['listing_type'] == 'service' || $listing['listing_type'] == 'both')): ?>
+                <div class="mb-3">
+                    <strong class="small" style="color: var(--plum);">Service Type:</strong>
+                    <span class="product-type-display" style="background: #e3f2fd; color: #0d47a1;"><?php echo htmlspecialchars($listing['service_type']); ?></span>
+                </div>
+                <?php endif; ?>
+
+                <p class="mb-1"><strong>Pricing:</strong> <span style="color: var(--plum);"><?php echo htmlspecialchars($listing['price_description']); ?></span></p>
 
                 <div class="mt-3">
                     <strong class="small">Payment Options:</strong>
@@ -582,7 +612,7 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
                         <?php endforeach; ?>
                     </div>
                     <?php if(!empty($listing['street_address'])): ?>
-                        <p class="mb-0 text-secondary small"><strong>Address:</strong> <?php echo $listing['street_address']; ?>, Ext <?php echo $listing['extension']; ?></p>
+                        <p class="mb-0 text-secondary small"><strong>Address:</strong> <?php echo htmlspecialchars($listing['street_address']); ?>, Ext <?php echo htmlspecialchars($listing['extension']); ?></p>
                     <?php else: ?>
                         <p class="mb-0 text-secondary small"><em>Mobile service (No physical address listed)</em></p>
                     <?php endif; ?>
@@ -606,12 +636,10 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
                 <!-- Status Messages -->
                 <?php if($listing['verification_status'] == 'Pending'): ?>
                 <div class="pending-notice mt-3">
-                    
                     <strong>Under Review:</strong> Your verification request is being reviewed by our admin team. You'll be notified once a decision is made.
                 </div>
                 <?php elseif($listing['verification_status'] == 'Verified'): ?>
                 <div class="verified-notice mt-3">
-                    
                     <strong>Verified Listing:</strong> Your listing is verified and will display a verified badge to customers.
                 </div>
                 <?php endif; ?>
@@ -623,7 +651,7 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
                 <?php endif; ?>
             </div>
 
-            <!-- NEW: Gallery Section (inserted here) -->
+            <!-- Gallery Section -->
             <div class="management-card">
                 <h5 class="fw-bold mb-3" style="color: var(--plum);">Work Photos</h5>
                 <div class="gallery-grid">
@@ -656,7 +684,6 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
             <div class="management-card">
                 <h5 class="fw-bold mb-4" style="color: var(--plum);">User Comments & Feedback</h5>
 
-                <!-- Average Rating Display -->
                 <?php if (count($comments) > 0): ?>
                 <div class="avg-rating-display">
                     <div class="avg-rating-number"><?php echo $avg_rating; ?></div>
@@ -685,7 +712,7 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
                             <div class="w-100">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <strong><?php echo $comment['full_name']; ?></strong>
+                                        <strong><?php echo htmlspecialchars($comment['full_name']); ?></strong>
                                         <?php if ($comment_rating > 0): ?>
                                         <div class="comment-rating mb-1">
                                             <?php for($i=1; $i<=5; $i++): ?>
@@ -695,21 +722,20 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
                                         </div>
                                         <?php endif; ?>
                                     </div>
-                                    <span class="text-muted small"><?php echo $comment['created_at']; ?></span>
+                                    <span class="text-muted small"><?php echo htmlspecialchars($comment['created_at']); ?></span>
                                 </div>
-                                <p class="text-secondary mb-1"><?php echo $comment['comment_text']; ?></p>
+                                <p class="text-secondary mb-1"><?php echo htmlspecialchars($comment['comment_text']); ?></p>
                                 <?php if(!empty($comment['image_path'])): ?>
-                                    <img src="<?php echo $comment['image_path']; ?>" class="comment-image" alt="Comment image">
+                                    <img src="<?php echo htmlspecialchars($comment['image_path']); ?>" class="comment-image" alt="Comment image">
                                 <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
+        </div>
 
-            </div>
-
-        <!-- Sidebar: Performance, Tips, Danger Zone -->
+        <!-- Sidebar -->
         <div class="col-lg-4">
             <div class="management-card">
                 <h5 class="fw-bold mb-3" style="color: var(--plum);">Performance</h5>
@@ -730,14 +756,11 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
             </div>
 
             <div class="alert shadow-sm" style="background-color: #e3f2fd; border: none; border-radius: 15px; color: #0d47a1;">
-                
                 <strong>Verification Tip:</strong> 4+ star ratings, consistent views, and positive feedback improve chances of getting verified!
             </div>
 
-            <!-- Danger Zone - appears LAST on mobile (in right column, after tip) -->
             <div class="danger-zone">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    
                     <h5 class="danger-zone-title mb-0">Danger Zone</h5>
                 </div>
                 <p class="danger-zone-text">
@@ -756,14 +779,12 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 15px; border: none;">
             <div class="modal-header" style="border-bottom: 2px solid #f8d7da;">
-                <h5 class="modal-title fw-bold" style="color: #d9534f;">
-                    Delete Listing
-                </h5>
+                <h5 class="modal-title fw-bold" style="color: #d9534f;">Delete Listing</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body py-4">
                 <p class="text-secondary">
-                    Are you sure you want to delete <strong style="color: var(--plum);">"<?php echo $listing['listing_name']; ?>"</strong>?
+                    Are you sure you want to delete <strong style="color: var(--plum);">"<?php echo htmlspecialchars($listing['listing_name']); ?>"</strong>?
                 </p>
                 <ul class="text-muted small mb-0">
                     <li>All listing data will be permanently removed</li>
@@ -786,7 +807,6 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Register Service Worker for offline support -->
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

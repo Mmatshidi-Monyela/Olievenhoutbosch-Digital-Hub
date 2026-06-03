@@ -21,6 +21,7 @@ $listing_name   = trim($_POST['listing_name'] ?? '');
 $listing_type   = $_POST['listing_type'] ?? 'service';
 $category       = $_POST['category'] ?? '';
 $service_type   = $_POST['service_type'] ?? '';
+$product_type   = trim($_POST['product_type'] ?? '');
 $extension      = $_POST['extension'] ?? '';
 $delivery_mode  = $_POST['delivery_mode'] ?? 'door_to_door';
 $street_address = trim($_POST['street_address'] ?? '');
@@ -42,15 +43,32 @@ if (isset($_POST['service_extensions']) && is_array($_POST['service_extensions']
 $service_extensions_str = !empty($service_extensions) ? implode(',', $service_extensions) : null;
 
 // ============================================
-// VALIDATION
+// VALIDATION (context-aware based on listing_type)
 // ============================================
 $errors = [];
 if (strlen($listing_name) < 3)  $errors[] = "Listing name too short (min 3 characters).";
 if (strlen($description) < 10)  $errors[] = "Description too short (min 10 characters).";
 if (empty($category))           $errors[] = "Please select a category.";
-if (empty($service_type))       $errors[] = "Please select a service/product type.";
-if (empty($extension))          $errors[] = "Please select a primary extension.";
 if (empty($price_desc))         $errors[] = "Please enter a price description.";
+
+// Service type validation
+if ($listing_type === 'service' || $listing_type === 'both') {
+    if (empty($service_type)) {
+        $errors[] = "Please select a service type.";
+    }
+}
+
+// Product type validation
+if ($listing_type === 'product' || $listing_type === 'both') {
+    if (empty($product_type)) {
+        $errors[] = "Please enter a product type.";
+    }
+}
+
+// Extension validation
+if (empty($extension)) {
+    $errors[] = "Please select a primary extension.";
+}
 
 // Photos are now required
 if (empty($_FILES['work_photos']) || empty($_FILES['work_photos']['name'][0])) {
@@ -107,20 +125,22 @@ if (!empty($_FILES['work_photos']) && is_array($_FILES['work_photos']['name'])) 
 $image_path = $uploaded[0] ?? 'uploads/listings/default_listing.jpg';
 
 // ============================================
-// INSERT LISTING
+// INSERT LISTING (with product_type column)
 // ============================================
 $stmt = mysqli_prepare($conn, "INSERT INTO listing (
-    user_id, listing_name, category, listing_type, service_type, extension, service_extensions,
-    delivery_mode, street_address, price_description, payment_options,
-    description, image_path, verification_status, is_active
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Unverified', 1)");
+    user_id, listing_name, category, listing_type, service_type, product_type, 
+    extension, service_extensions, delivery_mode, street_address, 
+    price_description, payment_options, description, image_path, 
+    verification_status, is_active
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Unverified', 1)");
 
-mysqli_stmt_bind_param($stmt, "issssssssssss",
+mysqli_stmt_bind_param($stmt, "isssssssssssss",
     $user_id,
     $listing_name,
     $category,
     $listing_type,
-    $service_type,
+    $service_type,      // varchar(50) - from dropdown
+    $product_type,      // varchar(50) - from text input (NEW COLUMN)
     $extension,
     $service_extensions_str,
     $delivery_mode,
