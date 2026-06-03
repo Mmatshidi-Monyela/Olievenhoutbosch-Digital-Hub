@@ -41,14 +41,6 @@ if (isset($_POST['service_extensions']) && is_array($_POST['service_extensions']
 }
 $service_extensions_str = !empty($service_extensions) ? implode(',', $service_extensions) : null;
 
-// Legacy service_mode for backward compatibility
-$service_mode = 'door-to-door';
-if (strpos($delivery_mode, 'customer_comes_to_me') !== false || 
-    strpos($delivery_mode, 'customer_pickup') !== false ||
-    strpos($delivery_mode, 'both_service') !== false) {
-    $service_mode = 'physical-site';
-}
-
 // ============================================
 // VALIDATION
 // ============================================
@@ -68,7 +60,8 @@ if (empty($_FILES['work_photos']) || empty($_FILES['work_photos']['name'][0])) {
 // Address required for fixed-location modes
 if ((strpos($delivery_mode, 'customer_comes_to_me') !== false || 
      strpos($delivery_mode, 'customer_pickup') !== false ||
-     strpos($delivery_mode, 'both_service') !== false) && empty($street_address)) {
+     strpos($delivery_mode, 'both_service') !== false ||
+     strpos($delivery_mode, 'both_product') !== false) && empty($street_address)) {
     $errors[] = "Street address is required when customers come to you or pick up.";
 }
 
@@ -118,11 +111,11 @@ $image_path = $uploaded[0] ?? 'uploads/listings/default_listing.jpg';
 // ============================================
 $stmt = mysqli_prepare($conn, "INSERT INTO listing (
     user_id, listing_name, category, listing_type, service_type, extension, service_extensions,
-    service_mode, delivery_mode, street_address, price_description, payment_options,
+    delivery_mode, street_address, price_description, payment_options,
     description, image_path, verification_status, is_active
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Unverified', 1)");
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Unverified', 1)");
 
-mysqli_stmt_bind_param($stmt, "isssssssssssss",
+mysqli_stmt_bind_param($stmt, "issssssssssss",
     $user_id,
     $listing_name,
     $category,
@@ -130,7 +123,6 @@ mysqli_stmt_bind_param($stmt, "isssssssssssss",
     $service_type,
     $extension,
     $service_extensions_str,
-    $service_mode,
     $delivery_mode,
     $street_address,
     $price_desc,

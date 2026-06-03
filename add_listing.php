@@ -249,6 +249,52 @@ if (!in_array($user_role, ['Provider', 'Both'])) {
             font-size: 0.85rem;
             color: #666;
         }
+
+        /* Type selector styling */
+        .type-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .type-option {
+            flex: 1;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .type-option:hover {
+            border-color: var(--rose-gold);
+            background: #fff9f8;
+        }
+        .type-option.selected {
+            border-color: var(--plum);
+            background: #fdf8ff;
+        }
+        .type-option input {
+            display: none;
+        }
+        .type-option i {
+            font-size: 1.5rem;
+            color: var(--copper);
+            margin-bottom: 6px;
+            display: block;
+        }
+        .type-option.selected i {
+            color: var(--plum);
+        }
+        .type-option strong {
+            display: block;
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 2px;
+        }
+        .type-option span {
+            font-size: 0.75rem;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -266,18 +312,24 @@ if (!in_array($user_role, ['Provider', 'Both'])) {
                 <input type="text" name="listing_name" class="form-control" minlength="3" maxlength="50" placeholder="e.g. John's Bakery" required>
 
                 <label class="form-label">What are you offering?</label>
-                <div class="payment-checkboxes">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="listing_type" id="typeService" value="service" checked onchange="updateDeliveryOptions()">
-                        <label class="form-check-label" for="typeService">Service (I do work)</label>
+                <div class="type-selector">
+                    <div class="type-option selected" onclick="selectType(this, 'service')">
+                        <input type="radio" name="listing_type" id="typeService" value="service" checked onchange="updateDeliveryOptions()">
+                        <i class="bi bi-tools"></i>
+                        <strong>Service</strong>
+                        <span>I do work</span>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="listing_type" id="typeProduct" value="product" onchange="updateDeliveryOptions()">
-                        <label class="form-check-label" for="typeProduct">Goods (I sell items)</label>
+                    <div class="type-option" onclick="selectType(this, 'product')">
+                        <input type="radio" name="listing_type" id="typeProduct" value="product" onchange="updateDeliveryOptions()">
+                        <i class="bi bi-box-seam"></i>
+                        <strong>Goods</strong>
+                        <span>I sell items</span>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="listing_type" id="typeBoth" value="both" onchange="updateDeliveryOptions()">
-                        <label class="form-check-label" for="typeBoth">Both</label>
+                    <div class="type-option" onclick="selectType(this, 'both')">
+                        <input type="radio" name="listing_type" id="typeBoth" value="both" onchange="updateDeliveryOptions()">
+                        <i class="bi bi-grid"></i>
+                        <strong>Both</strong>
+                        <span>I do both</span>
                     </div>
                 </div>
 
@@ -291,7 +343,7 @@ if (!in_array($user_role, ['Provider', 'Both'])) {
                     <option>Personal Care</option>
                 </select>
 
-                <label class="form-label">Service / Product Type</label>
+                <label class="form-label" id="serviceTypeLabel">Service / Product Type</label>
                 <select name="service_type" class="form-select" id="serviceType" required>
                     <option value="">Select Type...</option>
                 </select>
@@ -324,7 +376,7 @@ if (!in_array($user_role, ['Provider', 'Both'])) {
 
                 <!-- DELIVERY / SERVICE MODE -->
                 <div class="section-divider"></div>
-                <div class="section-title">How Customers Receive</div>
+                <div class="section-title" id="deliverySectionTitle">How Customers Receive Your Service</div>
 
                 <div class="delivery-options" id="deliveryOptionsContainer">
                     <!-- Populated by JS -->
@@ -335,7 +387,7 @@ if (!in_array($user_role, ['Provider', 'Both'])) {
                 <div id="addressSection">
                     <label class="form-label">Street Address / House Number</label>
                     <input type="text" name="street_address" id="streetAddressInput" class="form-control" placeholder="e.g. 1234 Peach Street">
-                    <div class="hint">Required when customers come to you or pick up</div>
+                    <div class="hint" id="addressHint">Required when customers come to you or pick up</div>
                 </div>
 
                 <!-- PRICING & PAYMENT -->
@@ -394,6 +446,7 @@ if (!in_array($user_role, ['Provider', 'Both'])) {
         </div>
     </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const services = {
     "Construction & Maintenance": ["Painting", "Plumbing", "Tiling", "Window Glazing"],
@@ -405,26 +458,58 @@ const services = {
 
 const allExtensions = ["4", "13", "15", "19", "20", "21", "22", "23", "24", "25", "26", "36"];
 
+// Context-aware delivery options
 const deliveryOptions = {
-    service: [
-        { value: 'door_to_door', label: 'Door-to-Door', sublabel: 'I go to the customer\'s location' },
-        { value: 'customer_comes_to_me', label: 'Customer Comes to Me', sublabel: 'They visit my shop or home' },
-        { value: 'both_service', label: 'Both', sublabel: 'I do door-to-door AND customers can come to me' },
-    ],
-    product: [
-        { value: 'i_deliver', label: 'I Deliver', sublabel: 'I bring the item to the customer' },
-        { value: 'customer_pickup', label: 'Customer Pickup', sublabel: 'They collect from my location' },
-    ],
-    both: [
-        { value: 'door_to_door', label: 'Door-to-Door / Delivery', sublabel: 'I go to them or deliver items' },
-        { value: 'i_deliver', label: 'I Deliver', sublabel: 'I bring goods to the customer' },
-        { value: 'customer_comes_to_me', label: 'Customer Comes to Me', sublabel: 'They visit my shop or home' },
-        { value: 'customer_pickup', label: 'Customer Pickup', sublabel: 'They collect from my location' },
-    ]
+    service: {
+        title: "How Customers Receive Your Service",
+        hint: "Required when customers come to you",
+        options: [
+            { value: 'door_to_door', label: 'Door-to-Door', sublabel: 'I go to the customer\'s location' },
+            { value: 'customer_comes_to_me', label: 'Customer Comes to Me', sublabel: 'They visit my shop or home' },
+            { value: 'both_service', label: 'Both', sublabel: 'I do door-to-door AND customers can come to me' },
+        ]
+    },
+    product: {
+        title: "How Customers Get Their Items",
+        hint: "Required when customers pick up from you",
+        options: [
+            { value: 'i_deliver', label: 'I Deliver', sublabel: 'I bring the item to the customer' },
+            { value: 'customer_pickup', label: 'Customer Pickup', sublabel: 'They collect from my location' },
+            { value: 'both_product', label: 'Both', sublabel: 'I deliver AND customers can pick up' },
+        ]
+    },
+    both: {
+        title: "How Customers Receive",
+        hint: "Required when customers come to you or pick up",
+        options: [
+            { value: 'door_to_door', label: 'Door-to-Door / Delivery', sublabel: 'I go to them or deliver items' },
+            { value: 'i_deliver', label: 'I Deliver', sublabel: 'I bring goods to the customer' },
+            { value: 'customer_comes_to_me', label: 'Customer Comes to Me', sublabel: 'They visit my shop or home' },
+            { value: 'customer_pickup', label: 'Customer Pickup', sublabel: 'They collect from my location' },
+        ]
+    }
 };
 
 let currentListingType = 'service';
 let selectedDeliveryModes = ['door_to_door'];
+
+function selectType(element, value) {
+    document.querySelectorAll('.type-option').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+    element.querySelector('input').checked = true;
+    currentListingType = value;
+    updateDeliveryOptions();
+
+    // Update label text
+    const label = document.getElementById('serviceTypeLabel');
+    if (value === 'service') {
+        label.textContent = 'Service Type';
+    } else if (value === 'product') {
+        label.textContent = 'Product Type';
+    } else {
+        label.textContent = 'Service / Product Type';
+    }
+}
 
 function updateServiceTypes() {
     const cat = document.getElementById("mainCategory").value;
@@ -438,8 +523,13 @@ function updateServiceTypes() {
 function updateDeliveryOptions() {
     const listingType = document.querySelector('input[name="listing_type"]:checked').value;
     currentListingType = listingType;
+    const config = deliveryOptions[listingType] || deliveryOptions.service;
     const container = document.getElementById("deliveryOptionsContainer");
-    const options = deliveryOptions[listingType] || deliveryOptions.service;
+    const options = config.options;
+
+    // Update section title
+    document.getElementById("deliverySectionTitle").textContent = config.title;
+    document.getElementById("addressHint").textContent = config.hint;
 
     selectedDeliveryModes = [options[0].value];
 
@@ -505,7 +595,7 @@ function toggleAddress() {
     const addressInput = document.getElementById("streetAddressInput");
 
     const needsAddress = selectedDeliveryModes.some(mode => 
-        mode === 'customer_comes_to_me' || mode === 'customer_pickup' || mode === 'both_service'
+        mode === 'customer_comes_to_me' || mode === 'customer_pickup' || mode === 'both_service' || mode === 'both_product'
     );
 
     if (needsAddress) {

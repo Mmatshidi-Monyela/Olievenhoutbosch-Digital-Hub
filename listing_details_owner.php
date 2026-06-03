@@ -574,6 +574,7 @@ if ($listing['verification_status'] == 'Pending') $statusClass = 'status-pending
                             if ($mode == 'door_to_door') $mode_label = 'Door-to-Door';
                             if ($mode == 'customer_comes_to_me') $mode_label = 'Customer Comes to Me';
                             if ($mode == 'both_service') $mode_label = 'Both (Door-to-Door + On-site)';
+                            if ($mode == 'both_product') $mode_label = 'Both (Delivery + Pickup)';
                             if ($mode == 'i_deliver') $mode_label = 'I Deliver';
                             if ($mode == 'customer_pickup') $mode_label = 'Customer Pickup';
                         ?>
