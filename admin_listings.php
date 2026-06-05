@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Admin auth check
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: login.php");
     exit();
@@ -11,31 +12,40 @@ if (file_exists('includes/db_connect.php')) {
     include 'includes/db_connect.php';
 }
 
-$services = [];
-$flaggedKeywords = ['scam', 'terrible', 'worst', 'never again', 'rip off', 'fraud', 
-                    'disappointed', 'horrible', 'awful', 'garbage', 'trash', 
-                    'waste of money', 'broken', 'fake', 'liar', 'stole'];
+$listings = [];
+    $flaggedKeywords = ['scam', 'terrible', 'worst', 'never again', 'rip off', 'fraud', 
+                        'disappointed', 'horrible', 'awful', 'garbage', 'trash', 
+                        'waste of money', 'broken', 'fake', 'liar', 'stole', 'scared', 
+                        'sick', 'unprofessional', 'bad', 'not recommend', 'poor', 'awful', 
+                        'dissatisfied', 'unhappy', 'regret', 'untrustworthy', 'rude', 
+                        'unresponsive', 'late', 'no show', 'unhelpful', 'disgusting', 'not worth it',
+                        'avoid', 'do not use', 'never use', 'worst experience', 'scammed', 'horrendous', 
+                        'atrocious', 'not tasty', 'rotten', 'undercooked', 'overcooked', 'dirty', 'filthy', 
+                        'unsanitary', 'lack of hygiene', 'sick from', 'food poisoning', 'vomited', 'diarrhea',
+                        'allergic reaction', 'burned', 'raw', 'spoiled', 'inedible', 'disaster', 'nightmare', 
+                        'terrible service', 'broken', 'damaged', 'poor quality', 'cheap materials',
+                        'speeding', 'speeds','reckless', 'dangerous', 'accident', 'injury', 'unlicensed', 'illegal', 
+                        'fraudulent','overloaded', 'overloading', 'overloads'];
 
 if ($conn) {
-    $svcRes = mysqli_query($conn, "
+    $listRes = mysqli_query($conn, "
         SELECT l.listing_id, l.listing_name, l.is_active, l.verification_status,
                COALESCE(AVG(c.rating), 0) as avg_rating,
                COUNT(c.comment_id) as comment_count,
                GROUP_CONCAT(c.comment_text SEPARATOR '|') as all_comments
         FROM listing l
         LEFT JOIN comment c ON l.listing_id = c.listing_id
-        WHERE l.is_active = 1
         GROUP BY l.listing_id, l.listing_name, l.is_active, l.verification_status
-        ORDER BY l.listing_name ASC
+        ORDER BY l.is_active DESC, l.listing_name ASC
     ");
 
-    while ($row = mysqli_fetch_assoc($svcRes)) {
+    while ($row = mysqli_fetch_assoc($listRes)) {
         $comments = [];
         if ($row['all_comments']) {
             $comments = explode('|', $row['all_comments']);
         }
 
-        $services[] = [
+        $listings[] = [
             'id' => $row['listing_id'],
             'name' => $row['listing_name'],
             'rating' => round(floatval($row['avg_rating']), 1),
@@ -74,7 +84,7 @@ function getListingAlert($listing, $flaggedKeywords) {
     ];
 }
 
-usort($services, function($a, $b) use ($flaggedKeywords) {
+usort($listings, function($a, $b) use ($flaggedKeywords) {
     $alertA = getListingAlert($a, $flaggedKeywords);
     $alertB = getListingAlert($b, $flaggedKeywords);
     return $alertB['priority'] <=> $alertA['priority'];
@@ -89,21 +99,42 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Services | Olievenhoutbosch Digital Hub</title>
+    <title>Listings | Olievenhoutbosch Digital Hub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root {
             --plum: #230344;
-            --rose-gold: #f8c9c0;
+            --rose-gold: #c99383;
             --rose-light: #fbe5e6;
             --text-gray: #6c757d;
         }
-        body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
+
+        /* Brand name swap: full on desktop, short on mobile */
+        .brand-text.full-name { display: inline !important; }
+        .brand-text.short-name { display: none !important; }
+
+        @media (max-width: 575.98px) {
+            .brand-text.full-name { display: none !important; }
+            .brand-text.short-name { display: inline !important; }
+        }
+
+        body
+        { 
+            background-color: #f4f7f6; 
+            font-family: 'Inter', sans-serif; 
+        }
+
         .navbar.top-nav { background-color: var(--plum); padding: 0.6rem 1rem; border-bottom: 3px solid var(--rose-gold); }
         .brand-text { font-size: clamp(0.8rem, 2.2vw, 1.1rem); white-space: nowrap; }
-        .nav-link { color: rgba(255,255,255,0.8) !important; font-weight: 500; border-bottom: 2px solid transparent; }
+        .nav-link 
+        { 
+            color: rgba(255,255,255,0.8) !important; 
+            font-weight: 500; 
+            border-bottom: 2px solid transparent; 
+        }
         .nav-link.active { color: var(--rose-gold) !important; border-bottom: 2px solid var(--rose-gold); }
+        
         .profile-avatar { width: 35px; height: 35px; background-color: var(--rose-gold); color: var(--plum); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
         @media (max-width: 991px) {
@@ -218,11 +249,27 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
         .btn-delete:hover { background-color: #721c24; color: white; }
         .btn-view { background-color: #e6ffed; color: #28a745; }
         .btn-view:hover { background-color: #28a745; color: white; }
+        .btn-restore { background-color: #d1ecf1; color: #0c5460; }
+        .btn-restore:hover { background-color: #0c5460; color: white; }
 
         .no-results {
             text-align: center;
             padding: 40px;
             color: var(--text-gray);
+        }
+
+        /* Suspended listing muted styles */
+        tr.row-suspended {
+            opacity: 0.5;
+            background-color: #f8f9fa !important;
+        }
+        tr.row-suspended:hover {
+            opacity: 0.7;
+            background-color: #e9ecef !important;
+        }
+        .name-suspended {
+            text-decoration: line-through;
+            color: #6c757d !important;
         }
     </style>
 </head>
@@ -233,9 +280,10 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
             <button class="navbar-toggler border-0 p-0" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
                 <i class="bi bi-list text-white fs-2"></i>
             </button>
-            <a class="navbar-brand d-flex align-items-center ms-2" href="admin_dashboard.php">
+            <a class="navbar-brand d-flex align-items-center" href="admin_dashboard.php">
                 <img src="images/logo.png" width="28" height="28" alt="logo" class="me-2">
-                <span class="brand-text fw-bold text-white">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text fw-bold text-white full-name">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text fw-bold text-white short-name">Olievenhoutbosch DH</span>
             </a>
             <div class="collapse navbar-collapse justify-content-center" id="adminNav">
                 <ul class="navbar-nav">
@@ -297,16 +345,28 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
                                 <?php if (empty($listings)): ?>
                                 <tr>
                                     <td colspan="4" class="text-center py-4 text-muted">
-                                        <p class="mt-2">No active listings found in the database.</p>
+                                        <p class="mt-2">No listings found in the database.</p>
                                     </td>
                                 </tr>
                                 <?php else: ?>
                                 <?php foreach ($listings as $listing): 
                                     $alert = getListingAlert($listing, $flaggedKeywords);
                                     $ratingClass = ($listing['rating'] > 0 && $listing['rating'] < 2.0) ? 'rating-low' : '';
+                                    $isSuspended = ($listing['status'] === 'Inactive');
+                                    $rowClass = $isSuspended ? 'row-suspended' : '';
+                                    $nameClass = $isSuspended ? 'name-suspended' : '';
                                 ?>
-                                <tr data-name="<?php echo strtolower(htmlspecialchars($listing['name'])); ?>" data-rating="<?php echo $listing['rating']; ?>" data-alert="<?php echo strtolower($alert['type']); ?>">
-                                    <td class="fw-bold"><?php echo htmlspecialchars($listing['name']); ?></td>
+                                <tr class="<?php echo $rowClass; ?>" 
+                                    data-name="<?php echo strtolower(htmlspecialchars($listing['name'])); ?>" 
+                                    data-rating="<?php echo $listing['rating']; ?>" 
+                                    data-alert="<?php echo strtolower($alert['type']); ?>"
+                                    data-status="<?php echo strtolower($listing['status']); ?>">
+                                    <td class="fw-bold <?php echo $nameClass; ?>">
+                                        <?php echo htmlspecialchars($listing['name']); ?>
+                                        <?php if ($isSuspended): ?>
+                                            <span class="badge bg-secondary ms-2" style="font-size: 0.65rem;">SUSPENDED</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <?php if ($listing['rating'] > 0): ?>
                                         <i class="bi bi-star-fill rating-star-plum <?php echo $ratingClass; ?>"></i>
@@ -323,7 +383,11 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
                                     </td>
                                     <td class="text-center">
                                         <button class="btn-action-round btn-view" title="View Details" onclick="viewListing(<?php echo $listing['id']; ?>)"><i class="bi bi-eye-fill"></i></button>
-                                        <button class="btn-action-round btn-suspend" title="Suspend" onclick="suspendListing(<?php echo $listing['id']; ?>)"><i class="bi bi-pause-fill"></i></button>
+                                        <?php if ($isSuspended): ?>
+                                            <button class="btn-action-round btn-restore" title="Restore" onclick="restoreListing(<?php echo $listing['id']; ?>)"><i class="bi bi-play-fill"></i></button>
+                                        <?php else: ?>
+                                            <button class="btn-action-round btn-suspend" title="Suspend" onclick="suspendListing(<?php echo $listing['id']; ?>)"><i class="bi bi-pause-fill"></i></button>
+                                        <?php endif; ?>
                                         <button class="btn-action-round btn-delete" title="Delete" onclick="deleteListing(<?php echo $listing['id']; ?>)"><i class="bi bi-trash3-fill"></i></button>
                                     </td>
                                 </tr>
@@ -341,12 +405,12 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
     </div>
 
     <!-- Listing Details Modal -->
-    <div class="modal fade" id="listingModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="listingModal" tabindex="-1" aria-labelledby="listingModalLabel" aria-hidden="true" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold" style="color: var(--plum);">Listing Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title fw-bold" id="listingModalLabel" style="color: var(--plum);">Listing Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="listingModalBody">
                     Loading...
@@ -367,7 +431,8 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
             if (row.querySelector('td[colspan]')) return;
             const name = row.getAttribute('data-name');
             const alert = row.getAttribute('data-alert');
-            if (name.includes(query) || alert.includes(query)) {
+            const status = row.getAttribute('data-status');
+            if (name.includes(query) || alert.includes(query) || status.includes(query)) {
                 row.style.display = '';
                 visible++;
             } else {
@@ -429,19 +494,26 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    // ===== ACTION BUTTONS — consolidated process file =====
+    // ===== ACTION BUTTONS =====
     function viewListing(id) {
-        const modal = new bootstrap.Modal(document.getElementById('listingModal'));
-        document.getElementById('listingModalBody').innerHTML = 'Loading...';
+        const modalEl = document.getElementById('listingModal');
+        const modalBody = document.getElementById('listingModalBody');
+
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) {
+            modal = new bootstrap.Modal(modalEl);
+        }
+
+        modalBody.innerHTML = 'Loading...';
         modal.show();
 
         fetch('get_listing_details.php?id=' + id)
             .then(r => r.text())
             .then(html => {
-                document.getElementById('listingModalBody').innerHTML = html;
+                modalBody.innerHTML = html;
             })
             .catch(() => {
-                document.getElementById('listingModalBody').innerHTML = '<p class="text-danger">Failed to load listing details.</p>';
+                modalBody.innerHTML = '<p class="text-danger">Failed to load listing details.</p>';
             });
     }
 
@@ -459,6 +531,26 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
                     location.reload();
                 } else {
                     alert('Error: ' + (data.message || 'Could not suspend listing'));
+                }
+            })
+            .catch(() => alert('Network error. Please try again.'));
+        }
+    }
+
+    function restoreListing(id) {
+        if (confirm('Restore this listing? It will be visible to the public again.')) {
+            fetch('admin_listings_process.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'action=restore&id=' + id
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Listing restored successfully.');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Could not restore listing'));
                 }
             })
             .catch(() => alert('Network error. Please try again.'));

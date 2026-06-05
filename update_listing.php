@@ -48,6 +48,7 @@ $listing_name   = trim($_POST['listing_name'] ?? '');
 $listing_type   = $_POST['listing_type'] ?? 'service';
 $category       = $_POST['category'] ?? '';
 $service_type   = $_POST['service_type'] ?? '';
+$product_type   = $_POST['product_type'] ?? '';
 $extension      = $_POST['extension'] ?? '';
 $delivery_mode  = $_POST['delivery_mode'] ?? 'door_to_door';
 $street_address = trim($_POST['street_address'] ?? '');
@@ -75,11 +76,20 @@ $errors = [];
 if (strlen($listing_name) < 3)  $errors[] = "Listing name too short (min 3 characters).";
 if (strlen($description) < 10)  $errors[] = "Description too short (min 10 characters).";
 if (empty($category))           $errors[] = "Please select a category.";
-if (empty($service_type))       $errors[] = "Please select a service/product type.";
 if (empty($extension))          $errors[] = "Please select a primary extension.";
 if (empty($price_desc))         $errors[] = "Please enter a price description.";
-if (empty($listing_type))        $errors[] = "Please select what you are offering.";
+if (empty($listing_type))       $errors[] = "Please select what you are offering.";
 if (empty($delivery_mode))      $errors[] = "Please select a delivery/service mode.";
+
+// FIXED: Only require service_type for Service or Both
+if (($listing_type === 'service' || $listing_type === 'both') && empty($service_type)) {
+    $errors[] = "Please select a service type.";
+}
+
+// FIXED: Only require product_type for Goods or Both
+if (($listing_type === 'product' || $listing_type === 'both') && empty($product_type)) {
+    $errors[] = "Please enter a product type.";
+}
 
 // Address required for fixed-location modes
 if ((strpos($delivery_mode, 'customer_comes_to_me') !== false || 
@@ -128,7 +138,7 @@ if (!empty($_FILES['new_photos']) && is_array($_FILES['new_photos']['name']) && 
         if (getimagesize($tmp) === false) continue;
 
         $dir = "uploads/listings/";
-        if (!is_dir($dir)) mkdir($dir, 0777, true);
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
 
         $safe_name = preg_replace('/[^a-zA-Z0-9.-]/', '_', $name);
         $target = $dir . time() . "_" . $i . "_" . $safe_name;
@@ -165,6 +175,7 @@ $update_stmt = mysqli_prepare($conn, "UPDATE listing SET
     listing_type = ?,
     category = ?, 
     service_type = ?, 
+    product_type = ?,
     extension = ?, 
     service_extensions = ?,
     delivery_mode = ?,
@@ -174,11 +185,12 @@ $update_stmt = mysqli_prepare($conn, "UPDATE listing SET
     description = ? 
     WHERE listing_id = ? AND user_id = ?");
 
-mysqli_stmt_bind_param($update_stmt, "ssssssssssssi", 
+mysqli_stmt_bind_param($update_stmt, "sssssssssssssi", 
     $listing_name, 
     $listing_type,
     $category, 
-    $service_type, 
+    $service_type,
+    $product_type,
     $extension, 
     $service_extensions_str,
     $delivery_mode,
@@ -196,7 +208,7 @@ if (mysqli_stmt_execute($update_stmt)) {
     header('Location: listing_details_owner.php?id=' . $listing_id);
 } else {
     $_SESSION['error_msg'] = 'Failed to update listing. Please try again.';
-    header('Location: edit_listing.php?id=' . $listing_id);
+    header('Location: update_listing.php?id=' . $listing_id);
 }
 
 mysqli_stmt_close($update_stmt);

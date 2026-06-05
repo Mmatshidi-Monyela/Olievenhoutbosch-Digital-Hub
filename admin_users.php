@@ -13,7 +13,6 @@ if (file_exists('includes/db_connect.php')) {
 
 $users = [];
 if ($conn) {
-    // EXCLUDE Admin from the users table — only Customers and Service Providers
     $userRes = mysqli_query($conn, "
         SELECT user_id, full_name, email, user_role, extension, created_at, is_active 
         FROM useraccount 
@@ -50,10 +49,20 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
     <style>
         :root {
             --plum: #230344;
-            --rose-gold: #f8c9c0;
+            --rose-gold: #c99383;
             --rose-light: #fbe5e6;
             --text-gray: #6c757d;
         }
+
+        /* Brand name swap: full on desktop, short on mobile */
+        .brand-text.full-name { display: inline !important; }
+        .brand-text.short-name { display: none !important; }
+
+        @media (max-width: 575.98px) {
+            .brand-text.full-name { display: none !important; }
+            .brand-text.short-name { display: inline !important; }
+        }
+
         body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
         .navbar.top-nav { background-color: var(--plum); padding: 0.6rem 1rem; border-bottom: 3px solid var(--rose-gold); }
         .brand-text { font-size: clamp(0.8rem, 2.2vw, 1.1rem); white-space: nowrap; }
@@ -167,7 +176,6 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
             color: var(--text-gray);
         }
 
-
         .status-inactive {
             opacity: 0.6;
             background: #f8f9fa;
@@ -187,9 +195,10 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
             <button class="navbar-toggler border-0 p-0" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
                 <i class="bi bi-list text-white fs-2"></i>
             </button>
-            <a class="navbar-brand d-flex align-items-center ms-2" href="admin_dashboard.php">
+            <a class="navbar-brand d-flex align-items-center" href="admin_dashboard.php">
                 <img src="images/logo.png" width="28" height="28" alt="logo" class="me-2">
-                <span class="brand-text fw-bold text-white">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text fw-bold text-white full-name">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text fw-bold text-white short-name">Olievenhoutbosch DH</span>
             </a>
             <div class="collapse navbar-collapse justify-content-center" id="adminNav">
                 <ul class="navbar-nav">
@@ -369,7 +378,7 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    // ===== ACTION BUTTONS — consolidated process file =====
+    // ===== ACTION BUTTONS =====
     function toggleUser(id, action) {
         const msg = action === 'suspend' 
             ? 'Suspend this user? They will not be able to log in or use the platform.' 

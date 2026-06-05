@@ -97,6 +97,18 @@ foreach ($comments as $c) {
     }
 }
 $hasRatingAlert = $avg_rating > 0 && $avg_rating < 3.5;
+
+function getDeliveryLabel($mode) {
+    $labels = [
+        'door_to_door' => 'Door-to-Door',
+        'customer_comes_to_me' => 'Customer Comes to Me',
+        'both_service' => 'Both (Door-to-Door + On-site)',
+        'both_product' => 'Both (Delivery + Pickup)',
+        'i_deliver' => 'I Deliver',
+        'customer_pickup' => 'Customer Pickup'
+    ];
+    return $labels[$mode] ?? $mode;
+}
 ?>
 
 <!-- ===== HEADER ===== -->
@@ -126,7 +138,7 @@ $hasRatingAlert = $avg_rating > 0 && $avg_rating < 3.5;
         <?php echo nl2br(htmlspecialchars($listing['description'])); ?>
     </p>
     <p class="text-muted mb-0" style="font-size: 0.75rem;">
-        <i class="bi bi-geo-alt me-1"></i><?php echo htmlspecialchars($listing['service_mode']); ?>
+        <i class="bi bi-geo-alt me-1"></i><?php echo !empty($listing['delivery_mode']) ? getDeliveryLabel($listing['delivery_mode']) : '—'; ?>
         <?php if (!empty($listing['street_address'])): ?>
             • <?php echo htmlspecialchars($listing['street_address']); ?>
         <?php endif; ?>
@@ -153,6 +165,9 @@ $hasRatingAlert = $avg_rating > 0 && $avg_rating < 3.5;
     </div>
     <div class="border-start ps-3" style="border-color: #ddd !important;">
         <span class="text-muted" style="font-size: 0.75rem;"><?php echo $listing['page_views'] ?? 0; ?> views</span>
+    </div>
+    <div class="border-start ps-3" style="border-color: #ddd !important;">
+        <span class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-truck me-1"></i><?php echo !empty($listing['delivery_mode']) ? getDeliveryLabel($listing['delivery_mode']) : '—'; ?></span>
     </div>
     <div class="border-start ps-3" style="border-color: #ddd !important;">
         <span class="text-muted" style="font-size: 0.75rem;"><?php echo htmlspecialchars($listing['price_description'] ?? '—'); ?></span>

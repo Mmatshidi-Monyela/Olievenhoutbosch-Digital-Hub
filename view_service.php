@@ -47,6 +47,10 @@ if (!$service) {
     exit();
 }
 
+// Determine if current user is the owner
+$current_user_id = $_SESSION['user_id'] ?? 0;
+$is_owner = ($current_user_id == $service['owner_id']);
+
 // Build all extensions array
 $all_extensions = [$service['extension']];
 if (!empty($service['service_extensions'])) {
@@ -134,6 +138,22 @@ $type_label = 'Service';
 if ($service['listing_type'] == 'product') $type_label = 'Goods';
 if ($service['listing_type'] == 'both') $type_label = 'Service & Goods';
 
+// Build category display string based on listing type
+$category_parts = [htmlspecialchars($service['category'])];
+if ($service['listing_type'] == 'product' && !empty($service['product_type'])) {
+    $category_parts[] = htmlspecialchars($service['product_type']);
+} elseif ($service['listing_type'] == 'both') {
+    if (!empty($service['service_type'])) {
+        $category_parts[] = htmlspecialchars($service['service_type']);
+    }
+    if (!empty($service['product_type'])) {
+        $category_parts[] = htmlspecialchars($service['product_type']);
+    }
+} elseif ($service['listing_type'] == 'service' && !empty($service['service_type'])) {
+    $category_parts[] = htmlspecialchars($service['service_type']);
+}
+$category_display = implode(' &bull; ', $category_parts);
+
 // Track view
 $ip = $_SERVER['REMOTE_ADDR'] ?? null;
 $viewer_id = $_SESSION['user_id'] ?? null;
@@ -146,17 +166,6 @@ $update_stmt = mysqli_prepare($conn, "UPDATE listing SET page_views = page_views
 mysqli_stmt_bind_param($update_stmt, "i", $listing_id);
 mysqli_stmt_execute($update_stmt);
 mysqli_stmt_close($update_stmt);
-
-// Count seller's other listings
-$seller_listings_count = 0;
-$count_stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM listing WHERE user_id = ? AND listing_id != ? AND is_active = 1");
-mysqli_stmt_bind_param($count_stmt, "ii", $service['owner_id'], $listing_id);
-mysqli_stmt_execute($count_stmt);
-$count_result = mysqli_stmt_get_result($count_stmt);
-if ($count_row = mysqli_fetch_assoc($count_result)) {
-    $seller_listings_count = $count_row['cnt'];
-}
-mysqli_stmt_close($count_stmt);
 
 // Member since
 $member_since = '';
@@ -202,25 +211,34 @@ function getDeliveryLabel($mode) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($service['listing_name']); ?> - Olievenhoutbosch Digital Hub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root {
             --plum: #230344;
-            --rose-gold: #f8c9c0;
+            --rose-gold: #c99383;
             --copper: #ba745f;
             --light-grey: #f4f7f6;
         }
 
-        * { -webkit-tap-highlight-color: transparent; }
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            box-sizing: border-box;
+        }
+
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
 
         body {
             background-color: var(--light-grey);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             color: #333;
             padding-bottom: 80px;
+            margin: 0;
         }
 
         /* ===== NAVBAR ===== */
@@ -233,18 +251,24 @@ function getDeliveryLabel($mode) {
             position: sticky;
             top: 0;
             z-index: 1030;
+            width: 100%;
+            border-bottom: 3px solid var(--rose-gold);
         }
         .navbar-brand {
             display: flex;
             align-items: center;
             gap: 8px;
             text-decoration: none;
+            min-width: 0;
+            flex: 1;
         }
         .brand-text {
             font-size: 1rem;
             font-weight: 700;
             color: white;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .back-link {
             color: white;
@@ -254,36 +278,54 @@ function getDeliveryLabel($mode) {
             display: flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .back-link:hover { color: var(--rose-gold); }
+
+        /* CHANGED: Mobile navbar adjustments */
+        @media (max-width: 575.98px) {
+            .navbar-custom {
+                height: 52px;
+                padding: 0 12px;
+            }
+            .brand-text {
+                font-size: 0.85rem;
+            }
+            .back-link {
+                font-size: 1.1rem;
+                padding: 8px;
+                margin-right: -8px;
+            }
+            .back-link span {
+                display: none;
+            }
+        }
 
         /* ===== PHOTO GALLERY ===== */
         .photo-hero {
             position: relative;
             width: 100%;
-            height: 320px;
-            background: #e0e0e0;
+            aspect-ratio: 4 / 3;
+            max-height: 360px;
+            background: #ffffff;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (max-width: 575.98px) {
+            .photo-hero {
+                aspect-ratio: 1 / 1;
+                max-height: 320px;
+            }
         }
         .photo-hero img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            display: block;
         }
-        .photo-counter {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            background: rgba(35, 3, 68, 0.85);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-        }
-        .photo-counter:hover { background: var(--plum); }
         .photo-nav {
             position: absolute;
             top: 50%;
@@ -301,6 +343,7 @@ function getDeliveryLabel($mode) {
             font-size: 1.2rem;
             opacity: 0;
             transition: opacity 0.2s;
+            z-index: 2;
         }
         .photo-hero:hover .photo-nav { opacity: 1; }
         .photo-nav.prev { left: 12px; }
@@ -314,6 +357,7 @@ function getDeliveryLabel($mode) {
             overflow-x: auto;
             background: white;
             scrollbar-width: none;
+            width: 100%;
         }
         .thumb-strip::-webkit-scrollbar { display: none; }
         .thumb-item {
@@ -331,6 +375,7 @@ function getDeliveryLabel($mode) {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
 
         /* ===== INFO CARD ===== */
@@ -344,11 +389,13 @@ function getDeliveryLabel($mode) {
             color: #1a1a1a;
             line-height: 1.3;
             margin-bottom: 6px;
+            word-break: break-word;
         }
         .listing-meta {
             color: #888;
             font-size: 0.85rem;
             margin-bottom: 12px;
+            word-break: break-word;
         }
         .type-badge {
             background: var(--plum);
@@ -358,6 +405,7 @@ function getDeliveryLabel($mode) {
             font-size: 0.75rem;
             font-weight: 600;
             display: inline-block;
+            white-space: nowrap;
         }
         .verified-badge {
             background: var(--rose-gold);
@@ -369,7 +417,17 @@ function getDeliveryLabel($mode) {
             display: inline-flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
         }
+        .status-badge {
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .status-unverified { background-color: #eee; color: #666; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-verified { background-color: #d4edda; color: #155724; }
 
         /* ===== PRICE ===== */
         .price-section {
@@ -387,15 +445,7 @@ function getDeliveryLabel($mode) {
             margin-top: 2px;
         }
 
-        /* ===== SELLER CARD ===== */
-        .seller-card {
-            background: white;
-            margin: 8px 0;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
+        /* ===== SELLER AVATAR ===== */
         .seller-avatar {
             width: 52px;
             height: 52px;
@@ -409,70 +459,21 @@ function getDeliveryLabel($mode) {
             font-size: 1.1rem;
             flex-shrink: 0;
         }
-        .seller-info { flex: 1; }
-        .seller-name {
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: #1a1a1a;
-            margin-bottom: 2px;
-        }
-        .seller-stats {
-            font-size: 0.8rem;
-            color: #888;
-        }
-        .seller-arrow {
-            color: #ccc;
-            font-size: 1.2rem;
-        }
 
-        /* ===== DETAILS SECTION ===== */
-        .details-section {
+        /* ===== DESCRIPTION ===== */
+        .desc-section {
             background: white;
             margin: 8px 0;
             padding: 16px;
         }
-        .section-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
-        }
-        .detail-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-        .detail-row:last-child { margin-bottom: 0; }
-        .detail-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: #fdfaf9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--copper);
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
-        .detail-content {
-            flex: 1;
-        }
-        .detail-label {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 2px;
-        }
-        .detail-value {
-            font-size: 0.9rem;
-            color: #1a1a1a;
-            font-weight: 500;
+        .desc-text {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #444;
+            word-break: break-word;
         }
 
-        /* Tag pills */
+        /* ===== TAG PILLS ===== */
         .tag-pill {
             background: #fdfaf9;
             color: var(--copper);
@@ -484,6 +485,7 @@ function getDeliveryLabel($mode) {
             margin-right: 6px;
             margin-bottom: 6px;
             border: 1px solid #f0e0dc;
+            white-space: nowrap;
         }
         .tag-pill.primary {
             background: var(--plum);
@@ -496,179 +498,222 @@ function getDeliveryLabel($mode) {
             border-color: #f5e6d3;
         }
 
-        /* ===== DESCRIPTION ===== */
-        .desc-section {
+        /* ===== COMMENTS / FEEDBACK SECTION ===== */
+        .comments-section {
             background: white;
             margin: 8px 0;
             padding: 16px;
         }
-        .desc-text {
-            font-size: 0.95rem;
-            line-height: 1.7;
-            color: #444;
-        }
-
-        /* ===== REVIEWS ===== */
-        .reviews-section {
-            background: white;
-            margin: 8px 0;
-            padding: 16px;
-        }
-        .reviews-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-        .reviews-title {
+        .comments-title {
             font-size: 1rem;
             font-weight: 700;
-            color: #1a1a1a;
-        }
-        .reviews-count {
-            font-size: 0.85rem;
-            color: #888;
-        }
-        .rating-summary {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--plum);
             margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .rating-big {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--plum);
-            line-height: 1;
-        }
-        .rating-stars {
-            color: #ffc107;
-            font-size: 0.9rem;
-        }
-        .rating-stars .empty { color: #e0e0e0; }
-
-        /* Review card */
-        .review-card {
-            padding: 14px 0;
-            border-bottom: 1px solid #f5f5f5;
-        }
-        .review-card:last-child { border-bottom: none; }
-        .review-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .review-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--rose-gold);
-            color: var(--plum);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-        .review-meta { flex: 1; }
-        .review-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #1a1a1a;
-        }
-        .review-time {
-            font-size: 0.75rem;
-            color: #aaa;
-        }
-        .review-stars {
-            color: #ffc107;
-            font-size: 0.8rem;
-        }
-        .review-stars .empty { color: #e0e0e0; }
-        .review-text {
-            font-size: 0.9rem;
-            color: #555;
-            line-height: 1.5;
-            margin-top: 6px;
-        }
-        .review-image {
-            max-height: 180px;
-            border-radius: 10px;
-            margin-top: 8px;
-            object-fit: cover;
         }
 
-        /* Write review button */
-        .btn-write-review {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--plum);
-            background: white;
-            color: var(--plum);
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 16px;
-            transition: all 0.2s;
-        }
-        .btn-write-review:hover {
+        /* Average rating display */
+        .avg-rating-display {
             background: var(--plum);
             color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .avg-rating-number {
+            font-size: 3rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .avg-rating-stars {
+            color: #ffc107;
+            font-size: 1.2rem;
+            margin: 8px 0;
+        }
+        .avg-rating-text {
+            font-size: 0.9rem;
+            opacity: 0.9;
         }
 
-        /* Review form (collapsible) */
-        .review-form {
-            display: none;
-            background: #fafafa;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
+        /* Comment form */
+        .comment-form {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
-        .review-form.active { display: block; }
-        .star-rating-input {
-            display: flex;
-            gap: 6px;
+        .comment-form h6 {
+            font-weight: 700;
             margin-bottom: 12px;
         }
-        .star-rating-input input { display: none; }
+
+        /* Star rating input */
+        .star-rating-input {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 5px;
+            margin-bottom: 12px;
+        }
+        .star-rating-input input {
+            display: none;
+        }
         .star-rating-input label {
             cursor: pointer;
-            font-size: 1.6rem;
-            color: #e0e0e0;
-            transition: color 0.15s;
+            font-size: 1.8rem;
+            color: #ddd;
+            transition: color 0.2s, transform 0.15s;
         }
         .star-rating-input label:hover,
         .star-rating-input label:hover ~ label,
         .star-rating-input input:checked ~ label {
             color: #ffc107;
         }
-        .review-form textarea {
-            border: 1px solid #e0e0e0;
+        .star-rating-input label:hover {
+            transform: scale(1.1);
+        }
+
+        /* Comment image preview */
+        .comment-image-preview {
+            max-width: 150px;
+            max-height: 150px;
             border-radius: 10px;
-            padding: 12px;
-            width: 100%;
-            resize: none;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* Comment card */
+        .comment-card {
+            display: flex;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+        }
+        .comment-card:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .comment-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--rose-gold);
+            color: var(--plum);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
             font-size: 0.9rem;
-            margin-bottom: 10px;
+            flex-shrink: 0;
+            margin-right: 14px;
         }
-        .review-form textarea:focus {
-            outline: none;
-            border-color: var(--rose-gold);
+        .comment-body {
+            flex: 1;
+            min-width: 0;
         }
-        .btn-submit-review {
-            width: 100%;
-            padding: 12px;
-            background: var(--plum);
-            color: white;
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+        .comment-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #1a1a1a;
+        }
+        .comment-time {
+            font-size: 0.75rem;
+            color: #aaa;
+            white-space: nowrap;
+            margin-left: 8px;
+        }
+        .comment-rating {
+            color: #ffc107;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+        .comment-rating .empty {
+            color: #ddd;
+        }
+        .comment-text {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.5;
+            word-break: break-word;
+            margin: 0;
+        }
+        .comment-image {
+            max-height: 200px;
+            border-radius: 10px;
+            margin-top: 8px;
+            max-width: 100%;
+            display: block;
+        }
+
+        /* Comment delete button — tiny copper bin bottom-right of comment card */
+        .comment-delete-btn {
+            position: absolute;
+            bottom: 8px;
+            right: 0;
+            background: none;
             border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.9rem;
+            color: var(--copper);
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: color 0.2s, background 0.2s, opacity 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            opacity: 0.6;
+            z-index: 2;
         }
-        .btn-submit-review:hover { background: #3a065e; }
+        .comment-delete-btn:hover {
+            color: #dc3545;
+            background: #fdf2f2;
+            opacity: 1;
+        }
+        .comment-delete-btn i {
+            font-size: 0.8rem;
+        }
+
+        /* ===== OWNER READ-ONLY COMMENT STYLES (matching listing_details_owner.php) ===== */
+        .owner-comment-box {
+            border-left: 4px solid var(--rose-gold);
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        .owner-comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--rose-gold);
+            color: var(--plum);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            margin-right: 12px;
+        }
+        .owner-comment-rating {
+            color: #ffc107;
+            font-size: 0.85rem;
+        }
+        .owner-readonly-notice {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: #0d47a1;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
 
         /* ===== STICKY BOTTOM CTA ===== */
         .sticky-cta {
@@ -709,8 +754,45 @@ function getDeliveryLabel($mode) {
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
+            flex-shrink: 0;
         }
         .btn-cta-secondary:hover { background: #f0b8ad; }
+
+        /* ===== MOBILE BUBBLE CARDS ===== */
+        .mobile-bubble-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin: 8px 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .mobile-bubble-card .section-label {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--plum);
+            margin-bottom: 16px;
+        }
+        .mobile-bubble-card .check-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #444;
+        }
+        .mobile-bubble-card .check-item:last-child {
+            margin-bottom: 0;
+        }
+        .mobile-bubble-card .eft-note {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 8px;
+        }
+        .mobile-bubble-card .detail-value {
+            font-size: 0.9rem;
+            color: #444;
+            margin-bottom: 8px;
+        }
 
         /* ===== DESKTOP LAYOUT ===== */
         @media (min-width: 992px) {
@@ -723,8 +805,8 @@ function getDeliveryLabel($mode) {
                 gap: 20px;
                 padding: 20px;
             }
-            .photo-hero { height: 420px; border-radius: 16px; }
-            .info-card, .price-section, .details-section, .desc-section, .reviews-section {
+            .photo-hero { aspect-ratio: 4 / 3; max-height: 420px; border-radius: 16px; }
+            .info-card, .price-section, .desc-section, .comments-section {
                 border-radius: 16px;
                 margin: 0 0 16px 0;
             }
@@ -758,6 +840,7 @@ function getDeliveryLabel($mode) {
                 align-items: center;
                 justify-content: center;
                 gap: 8px;
+                text-decoration: none;
             }
             .sidebar-btn-primary {
                 background: var(--plum);
@@ -771,6 +854,10 @@ function getDeliveryLabel($mode) {
             .sidebar-btn-secondary:hover { background: #f0b8ad; color: var(--plum); }
         }
 
+        @media (max-width: 991.98px) {
+            .sidebar-desktop { display: none !important; }
+        }
+
         /* ===== LIGHTBOX ===== */
         .lightbox-overlay {
             display: none;
@@ -780,6 +867,7 @@ function getDeliveryLabel($mode) {
             z-index: 9999;
             justify-content: center;
             align-items: center;
+            pointer-events: auto;
         }
         .lightbox-overlay.active { display: flex; }
         .lightbox-img {
@@ -795,7 +883,7 @@ function getDeliveryLabel($mode) {
             color: white;
             font-size: 1.8rem;
             cursor: pointer;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             width: 44px;
             height: 44px;
             border-radius: 50%;
@@ -803,6 +891,11 @@ function getDeliveryLabel($mode) {
             align-items: center;
             justify-content: center;
             border: none;
+            z-index: 10000;
+            pointer-events: auto;
+        }
+        .lightbox-close:hover {
+            background: rgba(255,255,255,0.3);
         }
         .lightbox-nav {
             position: absolute;
@@ -849,19 +942,25 @@ function getDeliveryLabel($mode) {
             background: #fdf2f2;
             color: #8b3a3a;
         }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
 
 <!-- Navbar -->
 <nav class="navbar-custom">
-    <div class="container-fluid d-flex align-items-center justify-content-between" style="max-width:1100px;margin:0 auto;">
-        <a href="index.php" class="navbar-brand">
-            <img src="images/logo.png" width="28" height="28" alt="logo">
+    <div class="container-fluid d-flex align-items-center justify-content-between" style="width:100%;padding:0 16px;">
+        <a href="index.php" class="navbar-brand" style="text-decoration:none;">
+            <img src="images/logo.png" width="28" height="28" alt="logo" style="flex-shrink:0;">
             <span class="brand-text">Olievenhoutbosch Digital Hub</span>
         </a>
         <a href="main.php" class="back-link">
-            <i class="bi bi-arrow-left"></i> Back
+            <i class="bi bi-arrow-left"></i>
+            <span class="d-none d-sm-inline">Back</span>
         </a>
     </div>
 </nav>
@@ -870,22 +969,13 @@ function getDeliveryLabel($mode) {
 
 <!-- Mobile: Hero Photo -->
 <div class="d-lg-none">
-    <div class="photo-hero" id="mobileHero">
-        <img src="<?php echo htmlspecialchars($main_image); ?>" alt="<?php echo htmlspecialchars($service['listing_name']); ?>" id="heroImg">
-        <?php if (count($gallery_images) > 1): ?>
-        <button class="photo-nav prev" onclick="changeHero(-1)"><i class="bi bi-chevron-left"></i></button>
-        <button class="photo-nav next" onclick="changeHero(1)"><i class="bi bi-chevron-right"></i></button>
-        <?php endif; ?>
-        <?php if (count($gallery_images) > 1): ?>
-        <button class="photo-counter" onclick="openLightbox(currentHeroIndex)">
-            <i class="bi bi-images"></i> <?php echo count($gallery_images); ?> photos
-        </button>
-        <?php endif; ?>
+    <div class="photo-hero" id="mobileHero" onclick="openLightbox(currentMobileIndex)" style="cursor:pointer;">
+        <img src="<?php echo htmlspecialchars($main_image); ?>" alt="<?php echo htmlspecialchars($service['listing_name']); ?>" id="heroImgMobile">
     </div>
     <?php if (count($gallery_images) > 1): ?>
-    <div class="thumb-strip">
+    <div class="thumb-strip" id="mobileThumbStrip">
         <?php foreach ($gallery_images as $idx => $img): ?>
-        <div class="thumb-item <?php echo $idx === 0 ? 'active' : ''; ?>" onclick="setHero(<?php echo $idx; ?>)">
+        <div class="thumb-item <?php echo $idx === 0 ? 'active' : ''; ?>" onclick="setHeroMobile(<?php echo $idx; ?>)">
             <img src="<?php echo htmlspecialchars($img['image_path']); ?>" alt="">
         </div>
         <?php endforeach; ?>
@@ -899,19 +989,12 @@ function getDeliveryLabel($mode) {
     <div>
         <!-- Desktop Gallery -->
         <div class="photo-hero" style="border-radius:16px;">
-            <img src="<?php echo htmlspecialchars($main_image); ?>" alt="<?php echo htmlspecialchars($service['listing_name']); ?>" id="desktopHeroImg" style="cursor:pointer;" onclick="openLightbox(0)">
-            <?php if (count($gallery_images) > 1): ?>
-            <button class="photo-nav prev" onclick="changeHero(-1)"><i class="bi bi-chevron-left"></i></button>
-            <button class="photo-nav next" onclick="changeHero(1)"><i class="bi bi-chevron-right"></i></button>
-            <button class="photo-counter" onclick="openLightbox(currentHeroIndex)">
-                <i class="bi bi-images"></i> <?php echo count($gallery_images); ?> photos
-            </button>
-            <?php endif; ?>
+            <img src="<?php echo htmlspecialchars($main_image); ?>" alt="<?php echo htmlspecialchars($service['listing_name']); ?>" id="heroImgDesktop" style="cursor:pointer;" onclick="openLightbox(currentDesktopIndex)">
         </div>
         <?php if (count($gallery_images) > 1): ?>
-        <div class="thumb-strip" style="border-radius:0 0 16px 16px;">
+        <div class="thumb-strip" id="desktopThumbStrip" style="border-radius:0 0 16px 16px;">
             <?php foreach ($gallery_images as $idx => $img): ?>
-            <div class="thumb-item <?php echo $idx === 0 ? 'active' : ''; ?>" onclick="setHero(<?php echo $idx; ?>)">
+            <div class="thumb-item <?php echo $idx === 0 ? 'active' : ''; ?>" onclick="setHeroDesktop(<?php echo $idx; ?>)">
                 <img src="<?php echo htmlspecialchars($img['image_path']); ?>" alt="">
             </div>
             <?php endforeach; ?>
@@ -922,138 +1005,114 @@ function getDeliveryLabel($mode) {
         <div class="info-card" style="border-radius:16px;">
             <div class="d-flex align-items-center gap-2 mb-2">
                 <span class="type-badge"><?php echo $type_label; ?></span>
-                <?php if($service['verification_status'] == 'Verified'): ?>
-                <span class="verified-badge"><i class="bi bi-patch-check-fill"></i> Verified</span>
-                <?php endif; ?>
+                <span class="status-badge <?php 
+                    if($service['verification_status'] == 'Verified') echo 'status-verified';
+                    elseif($service['verification_status'] == 'Pending') echo 'status-pending';
+                    else echo 'status-unverified';
+                ?>">
+                    <?php echo $service['verification_status']; ?>
+                </span>
             </div>
             <h1 class="listing-title"><?php echo htmlspecialchars($service['listing_name']); ?></h1>
-            <p class="listing-meta"><?php echo htmlspecialchars($service['category']); ?> &bull; <?php echo htmlspecialchars($service['service_type']); ?></p>
+            <p class="listing-meta"><?php echo $category_display; ?></p>
         </div>
 
         <!-- Description -->
         <div class="desc-section" style="border-radius:16px;">
-            <div class="section-label">Description</div>
+            <div class="section-label" style="font-size:1rem;font-weight:700;color:var(--plum);margin-bottom:16px;">Description</div>
             <p class="desc-text"><?php echo nl2br(htmlspecialchars($service['description'])); ?></p>
         </div>
 
-        <!-- Details -->
-        <div class="details-section" style="border-radius:16px;">
-            <div class="section-label">Details</div>
+        <!-- Comments / Feedback -->
+        <div class="comments-section" style="border-radius:16px;">
+            <div class="comments-title">Community Feedback</div>
 
-            <div class="detail-row">
-                <div class="detail-icon"><i class="bi bi-geo-alt"></i></div>
-                <div class="detail-content">
-                    <div class="detail-label">Location</div>
-                    <div class="detail-value">
-                        <?php 
-                        if (!empty($service['street_address'])) {
-                            echo htmlspecialchars($service['street_address']);
-                        } else {
-                            echo 'Mobile service - no fixed address';
-                        }
-                        ?>
-                    </div>
-                    <div class="ext-list mt-1">
-                        <?php foreach ($all_extensions as $idx => $ext): ?>
-                            <span class="tag-pill <?php echo $idx === 0 ? 'primary' : ''; ?>">Ext <?php echo $ext; ?></span>
-                        <?php endforeach; ?>
-                    </div>
+            <!-- Average Rating -->
+            <div class="avg-rating-display">
+                <div class="avg-rating-number"><?php echo $avg_rating; ?></div>
+                <div class="avg-rating-stars">
+                    <?php for($i=1; $i<=5; $i++): ?>
+                        <i class="bi bi-star<?php echo $i <= round($avg_rating) ? '-fill' : ''; ?>"></i>
+                    <?php endfor; ?>
                 </div>
+                <div class="avg-rating-text">Based on <?php echo $review_count; ?> review(s)</div>
             </div>
 
-            <div class="detail-row">
-                <div class="detail-icon"><i class="bi bi-truck"></i></div>
-                <div class="detail-content">
-                    <div class="detail-label">How you\'ll get it</div>
-                    <div>
-                        <?php foreach ($delivery_modes as $mode): ?>
-                            <span class="tag-pill delivery"><?php echo getDeliveryLabel($mode); ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
+            <?php if ($is_owner): ?>
+            <!-- OWNER VIEW: Read-only comments, no form -->
+            <div class="owner-readonly-notice">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Owner View:</strong> You cannot comment on your own listing. Below is what customers see.
             </div>
-
-            <div class="detail-row">
-                <div class="detail-icon"><i class="bi bi-credit-card"></i></div>
-                <div class="detail-content">
-                    <div class="detail-label">Payment</div>
-                    <div>
-                        <?php foreach ($payment_options as $pay): ?>
-                            <span class="tag-pill"><?php echo htmlspecialchars($pay); ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php if (in_array('EFT', $payment_options)): ?>
-                    <div class="detail-value mt-1" style="font-size:0.8rem;color:#888;">
-                        <i class="bi bi-shield-check"></i> EFT details shared via messaging for privacy
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Reviews -->
-        <div class="reviews-section" style="border-radius:16px;">
-            <div class="reviews-header">
-                <span class="reviews-title">Reviews</span>
-                <span class="reviews-count"><?php echo $review_count; ?> review<?php echo $review_count != 1 ? 's' : ''; ?></span>
-            </div>
-
-            <?php if ($review_count > 0): ?>
-            <div class="rating-summary">
-                <span class="rating-big"><?php echo $avg_rating; ?></span>
-                <div>
-                    <div class="rating-stars">
-                        <?php for($i=1; $i<=5; $i++): ?>
-                            <i class="bi bi-star<?php echo $i <= round($avg_rating) ? '-fill' : ''; ?>"></i>
-                        <?php endfor; ?>
-                    </div>
-                    <div style="font-size:0.8rem;color:#888;">Based on <?php echo $review_count; ?> review<?php echo $review_count != 1 ? 's' : ''; ?></div>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <button class="btn-write-review" onclick="toggleReviewForm()">
-                <i class="bi bi-pencil-square"></i> Write a Review
-            </button>
-
-            <div class="review-form" id="reviewForm">
+            <?php else: ?>
+            <!-- NON-OWNER VIEW: Full comment form (Both users can comment here) -->
+            <div class="comment-form">
+                <h6>Leave your feedback</h6>
                 <form action="add_comment.php" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     <input type="hidden" name="listing_id" value="<?php echo (int)$listing_id; ?>">
-                    <div class="star-rating-input">
-                        <input type="radio" id="star5" name="rating" value="5" required><label for="star5"><i class="bi bi-star-fill"></i></label>
-                        <input type="radio" id="star4" name="rating" value="4"><label for="star4"><i class="bi bi-star-fill"></i></label>
-                        <input type="radio" id="star3" name="rating" value="3"><label for="star3"><i class="bi bi-star-fill"></i></label>
-                        <input type="radio" id="star2" name="rating" value="2"><label for="star2"><i class="bi bi-star-fill"></i></label>
-                        <input type="radio" id="star1" name="rating" value="1"><label for="star1"><i class="bi bi-star-fill"></i></label>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-muted mb-2">Your Rating</label>
+                        <div class="star-rating-input">
+                            <input type="radio" id="star5" name="rating" value="5" required>
+                            <label for="star5"><i class="bi bi-star-fill"></i></label>
+                            <input type="radio" id="star4" name="rating" value="4">
+                            <label for="star4"><i class="bi bi-star-fill"></i></label>
+                            <input type="radio" id="star3" name="rating" value="3">
+                            <label for="star3"><i class="bi bi-star-fill"></i></label>
+                            <input type="radio" id="star2" name="rating" value="2">
+                            <label for="star2"><i class="bi bi-star-fill"></i></label>
+                            <input type="radio" id="star1" name="rating" value="1">
+                            <label for="star1"><i class="bi bi-star-fill"></i></label>
+                        </div>
                     </div>
-                    <textarea name="comment_text" rows="3" placeholder="Share your experience..." required></textarea>
-                    <input type="file" name="comment_image" accept="image/*" style="margin-bottom:10px;font-size:0.85rem;">
-                    <button type="submit" class="btn-submit-review">Post Review</button>
+
+                    <div class="mb-3">
+                        <textarea name="comment_text" class="form-control" rows="3" placeholder="Share your experience..." required style="border-radius:10px;resize:none;"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Attach an image (optional)</label>
+                        <input type="file" name="comment_image" class="form-control" accept="image/*" onchange="previewImage(this)" style="font-size:0.85rem;">
+                        <img id="imagePreview" class="comment-image-preview" alt="Preview">
+                    </div>
+
+                    <button type="submit" class="btn-cta-primary" style="border-radius:10px;">Post Comment</button>
                 </form>
             </div>
+            <?php endif; ?>
 
+            <!-- Existing Comments -->
             <?php foreach($comments as $comment): 
                 $initials = getInitials($comment['full_name']);
                 $time_ago = timeAgo($comment['created_at']);
+                $can_delete = ($current_user_id == $comment['user_id']);
             ?>
-            <div class="review-card">
-                <div class="review-header">
-                    <div class="review-avatar"><?php echo $initials; ?></div>
-                    <div class="review-meta">
-                        <div class="review-name"><?php echo htmlspecialchars($comment['full_name']); ?></div>
-                        <div class="review-time"><?php echo $time_ago; ?></div>
-                    </div>
-                    <div class="review-stars">
-                        <?php for($i=1; $i<=5; $i++): ?>
-                            <i class="bi bi-star<?php echo $i <= $comment['rating'] ? '-fill' : ' empty'; ?>"></i>
-                        <?php endfor; ?>
-                    </div>
-                </div>
-                <p class="review-text"><?php echo htmlspecialchars($comment['comment_text']); ?></p>
-                <?php if(!empty($comment['image_path'])): ?>
-                    <img src="<?php echo htmlspecialchars($comment['image_path']); ?>" class="review-image" alt="Review photo">
+            <div class="comment-card" id="comment-<?php echo (int)$comment['comment_id']; ?>">
+                <?php if ($can_delete): ?>
+                <button type="button" class="comment-delete-btn" onclick="deleteComment(<?php echo (int)$comment['comment_id']; ?>)" title="Delete your comment">
+                    <i class="bi bi-trash3"></i> Delete
+                </button>
                 <?php endif; ?>
+                <div class="comment-avatar"><?php echo $initials; ?></div>
+                <div class="comment-body">
+                    <div class="comment-header">
+                        <div>
+                            <div class="comment-name"><?php echo htmlspecialchars($comment['full_name']); ?></div>
+                            <div class="comment-rating">
+                                <?php for($i=1; $i<=5; $i++): ?>
+                                    <i class="bi bi-star<?php echo $i <= $comment['rating'] ? '-fill' : ' empty'; ?>"></i>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <span class="comment-time"><?php echo $time_ago; ?></span>
+                    </div>
+                    <?php if(!empty($comment['image_path'])): ?>
+                        <img src="<?php echo htmlspecialchars($comment['image_path']); ?>" class="comment-image" alt="Comment image">
+                    <?php endif; ?>
+                    <p class="comment-text"><?php echo htmlspecialchars($comment['comment_text']); ?></p>
+                </div>
             </div>
             <?php endforeach; ?>
         </div>
@@ -1063,10 +1122,8 @@ function getDeliveryLabel($mode) {
     <div class="sidebar-desktop">
         <div class="sidebar-card">
             <div class="sidebar-price"><?php echo htmlspecialchars($service['price_description']); ?></div>
-            <div style="font-size:0.85rem;color:#888;margin-bottom:16px;">
-                <?php echo $type_label; ?> &bull; <?php echo htmlspecialchars($service['category']); ?>
-            </div>
 
+            <?php if (!$is_owner): ?>
             <?php if (!empty($phone_link)): ?>
             <a href="<?php echo $phone_link; ?>" class="sidebar-btn sidebar-btn-primary">
                 <i class="bi bi-telephone"></i> Call Seller
@@ -1075,33 +1132,26 @@ function getDeliveryLabel($mode) {
             <button type="button" class="sidebar-btn sidebar-btn-secondary" data-bs-toggle="modal" data-bs-target="#messageModal">
                 <i class="bi bi-chat-dots"></i> Message
             </button>
+            <?php endif; ?>
         </div>
 
         <div class="sidebar-card">
-            <div class="section-label" style="margin-bottom:12px;">Seller</div>
+            <div class="section-label" style="font-size:1rem;font-weight:700;color:var(--plum);margin-bottom:16px;">Seller</div>
             <div style="display:flex;align-items:center;gap:12px;">
                 <div class="seller-avatar" style="width:48px;height:48px;">
                     <?php echo getInitials($service['owner_name']); ?>
                 </div>
-                <div>
-                    <div style="font-weight:600;color:#1a1a1a;"><?php echo htmlspecialchars($service['owner_name']); ?></div>
+                <div style="min-width:0;">
+                    <div style="font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($service['owner_name']); ?></div>
                     <div style="font-size:0.8rem;color:#888;">
                         Member since <?php echo $member_since; ?>
                     </div>
                 </div>
             </div>
-            <?php if ($seller_listings_count > 0): ?>
-            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0f0;">
-                <a href="seller_listings.php?user_id=<?php echo $service['owner_id']; ?>" style="color:var(--copper);font-size:0.9rem;font-weight:500;text-decoration:none;">
-                    <i class="bi bi-grid"></i> <?php echo $seller_listings_count; ?> other listing<?php echo $seller_listings_count != 1 ? 's' : ''; ?>
-                    <i class="bi bi-chevron-right" style="float:right;"></i>
-                </a>
-            </div>
-            <?php endif; ?>
         </div>
 
         <div class="sidebar-card">
-            <div class="section-label" style="margin-bottom:12px;">Location</div>
+            <div class="section-label" style="font-size:1rem;font-weight:700;color:var(--plum);margin-bottom:16px;">Location</div>
             <div style="font-size:0.9rem;color:#444;margin-bottom:8px;">
                 <?php echo !empty($service['street_address']) ? htmlspecialchars($service['street_address']) : 'Mobile service'; ?>
             </div>
@@ -1113,7 +1163,7 @@ function getDeliveryLabel($mode) {
         </div>
 
         <div class="sidebar-card">
-            <div class="section-label" style="margin-bottom:12px;">Delivery</div>
+            <div class="section-label" style="font-size:1rem;font-weight:700;color:var(--plum);margin-bottom:16px;">Delivery</div>
             <?php foreach ($delivery_modes as $mode): ?>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:0.9rem;">
                     <i class="bi bi-check-circle-fill" style="color:var(--copper);"></i>
@@ -1123,7 +1173,7 @@ function getDeliveryLabel($mode) {
         </div>
 
         <div class="sidebar-card">
-            <div class="section-label" style="margin-bottom:12px;">Payment</div>
+            <div class="section-label" style="font-size:1rem;font-weight:700;color:var(--plum);margin-bottom:16px;">Payment</div>
             <?php foreach ($payment_options as $pay): ?>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:0.9rem;">
                     <i class="bi bi-check-circle-fill" style="color:var(--copper);"></i>
@@ -1139,18 +1189,22 @@ function getDeliveryLabel($mode) {
     </div>
 </div>
 
-<!-- Mobile Content (same structure, no grid) -->
+<!-- Mobile Content -->
 <div class="d-lg-none">
     <!-- Info -->
     <div class="info-card">
         <div class="d-flex align-items-center gap-2 mb-2">
             <span class="type-badge"><?php echo $type_label; ?></span>
-            <?php if($service['verification_status'] == 'Verified'): ?>
-            <span class="verified-badge"><i class="bi bi-patch-check-fill"></i> Verified</span>
-            <?php endif; ?>
+            <span class="status-badge <?php 
+                if($service['verification_status'] == 'Verified') echo 'status-verified';
+                elseif($service['verification_status'] == 'Pending') echo 'status-pending';
+                else echo 'status-unverified';
+            ?>">
+                <?php echo $service['verification_status']; ?>
+            </span>
         </div>
         <h1 class="listing-title"><?php echo htmlspecialchars($service['listing_name']); ?></h1>
-        <p class="listing-meta"><?php echo htmlspecialchars($service['category']); ?> &bull; <?php echo htmlspecialchars($service['service_type']); ?></p>
+        <p class="listing-meta"><?php echo $category_display; ?></p>
     </div>
 
     <!-- Price -->
@@ -1159,145 +1213,164 @@ function getDeliveryLabel($mode) {
         <div class="price-note"><?php echo $type_label; ?></div>
     </div>
 
-    <!-- Seller Card -->
-    <div class="seller-card" onclick="location.href='seller_listings.php?user_id=<?php echo $service['owner_id']; ?>'" style="cursor:pointer;">
-        <div class="seller-avatar"><?php echo getInitials($service['owner_name']); ?></div>
-        <div class="seller-info">
-            <div class="seller-name"><?php echo htmlspecialchars($service['owner_name']); ?></div>
-            <div class="seller-stats">
-                Member since <?php echo $member_since; ?>
-                <?php if ($seller_listings_count > 0): ?>
-                &bull; <?php echo $seller_listings_count; ?> other listing<?php echo $seller_listings_count != 1 ? 's' : ''; ?>
-                <?php endif; ?>
+    <!-- Seller Bubble Card -->
+    <div class="mobile-bubble-card">
+        <div class="section-label">Seller</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="seller-avatar" style="width:48px;height:48px;">
+                <?php echo getInitials($service['owner_name']); ?>
             </div>
-        </div>
-        <i class="bi bi-chevron-right seller-arrow"></i>
-    </div>
-
-    <!-- Details -->
-    <div class="details-section">
-        <div class="section-label">Details</div>
-
-        <div class="detail-row">
-            <div class="detail-icon"><i class="bi bi-geo-alt"></i></div>
-            <div class="detail-content">
-                <div class="detail-label">Location</div>
-                <div class="detail-value">
-                    <?php echo !empty($service['street_address']) ? htmlspecialchars($service['street_address']) : 'Mobile service'; ?>
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($service['owner_name']); ?></div>
+                <div style="font-size:0.8rem;color:#888;">
+                    Member since <?php echo $member_since; ?>
                 </div>
-                <div class="ext-list mt-1">
-                    <?php foreach ($all_extensions as $idx => $ext): ?>
-                        <span class="tag-pill <?php echo $idx === 0 ? 'primary' : ''; ?>">Ext <?php echo $ext; ?></span>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-icon"><i class="bi bi-truck"></i></div>
-            <div class="detail-content">
-                <div class="detail-label">How you\'ll get it</div>
-                <div>
-                    <?php foreach ($delivery_modes as $mode): ?>
-                        <span class="tag-pill delivery"><?php echo getDeliveryLabel($mode); ?></span>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-icon"><i class="bi bi-credit-card"></i></div>
-            <div class="detail-content">
-                <div class="detail-label">Payment</div>
-                <div>
-                    <?php foreach ($payment_options as $pay): ?>
-                        <span class="tag-pill"><?php echo htmlspecialchars($pay); ?></span>
-                    <?php endforeach; ?>
-                </div>
-                <?php if (in_array('EFT', $payment_options)): ?>
-                <div class="detail-value mt-1" style="font-size:0.8rem;color:#888;">
-                    <i class="bi bi-shield-check"></i> EFT details shared via messaging for privacy
-                </div>
-                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <!-- Description -->
-    <div class="desc-section">
+        <!-- Description -->
+    <div class="mobile-bubble-card">
         <div class="section-label">Description</div>
-        <p class="desc-text"><?php echo nl2br(htmlspecialchars($service['description'])); ?></p>
+        <p class="desc-text" style="margin:0;"><?php echo nl2br(htmlspecialchars($service['description'])); ?></p>
     </div>
 
-    <!-- Reviews -->
-    <div class="reviews-section">
-        <div class="reviews-header">
-            <span class="reviews-title">Reviews</span>
-            <span class="reviews-count"><?php echo $review_count; ?> review<?php echo $review_count != 1 ? 's' : ''; ?></span>
+<!-- Location Bubble Card -->
+    <div class="mobile-bubble-card">
+        <div class="section-label">Location</div>
+        <div class="detail-value">
+            <?php echo !empty($service['street_address']) ? htmlspecialchars($service['street_address']) : 'Mobile service'; ?>
         </div>
+        <div class="ext-list">
+            <?php foreach ($all_extensions as $idx => $ext): ?>
+                <span class="tag-pill <?php echo $idx === 0 ? 'primary' : ''; ?>">Ext <?php echo $ext; ?></span>
+            <?php endforeach; ?>
+        </div>
+    </div>
 
-        <?php if ($review_count > 0): ?>
-        <div class="rating-summary">
-            <span class="rating-big"><?php echo $avg_rating; ?></span>
-            <div>
-                <div class="rating-stars">
-                    <?php for($i=1; $i<=5; $i++): ?>
-                        <i class="bi bi-star<?php echo $i <= round($avg_rating) ? '-fill' : ''; ?>"></i>
-                    <?php endfor; ?>
-                </div>
-                <div style="font-size:0.8rem;color:#888;">Based on <?php echo $review_count; ?> review<?php echo $review_count != 1 ? 's' : ''; ?></div>
+    <!-- Delivery Bubble Card -->
+    <div class="mobile-bubble-card">
+        <div class="section-label">Delivery</div>
+        <?php foreach ($delivery_modes as $mode): ?>
+            <div class="check-item">
+                <i class="bi bi-check-circle-fill" style="color:var(--copper);"></i>
+                <?php echo getDeliveryLabel($mode); ?>
             </div>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- Payment Bubble Card -->
+    <div class="mobile-bubble-card">
+        <div class="section-label">Payment</div>
+        <?php foreach ($payment_options as $pay): ?>
+            <div class="check-item">
+                <i class="bi bi-check-circle-fill" style="color:var(--copper);"></i>
+                <?php echo htmlspecialchars($pay); ?>
+            </div>
+        <?php endforeach; ?>
+        <?php if (in_array('EFT', $payment_options)): ?>
+        <div class="eft-note">
+            <i class="bi bi-shield-check"></i> EFT details shared via messaging for privacy
         </div>
         <?php endif; ?>
+    </div>
 
-        <button class="btn-write-review" onclick="toggleReviewForm()">
-            <i class="bi bi-pencil-square"></i> Write a Review
-        </button>
+    <!-- Comments / Feedback -->
+    <div class="comments-section" style="margin:8px 16px;border-radius:16px;">
+        <div class="comments-title" style="font-size:1rem;font-weight:700;color:var(--plum);margin-bottom:16px;">Community Feedback</div>
+        <!-- Average Rating -->
+        <div class="avg-rating-display">
+            <div class="avg-rating-number"><?php echo $avg_rating; ?></div>
+            <div class="avg-rating-stars">
+                <?php for($i=1; $i<=5; $i++): ?>
+                    <i class="bi bi-star<?php echo $i <= round($avg_rating) ? '-fill' : ''; ?>"></i>
+                <?php endfor; ?>
+            </div>
+            <div class="avg-rating-text">Based on <?php echo $review_count; ?> review(s)</div>
+        </div>
 
-        <div class="review-form" id="reviewFormMobile">
+        <?php if ($is_owner): ?>
+        <!-- OWNER VIEW: Read-only comments, no form -->
+        <div class="owner-readonly-notice">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Owner View:</strong> You cannot comment on your own listing.
+        </div>
+        <?php else: ?>
+        <!-- NON-OWNER VIEW: Full comment form -->
+        <div class="comment-form">
+            <h6>Leave your feedback</h6>
             <form action="add_comment.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                 <input type="hidden" name="listing_id" value="<?php echo (int)$listing_id; ?>">
-                <div class="star-rating-input">
-                    <input type="radio" id="mstar5" name="rating" value="5" required><label for="mstar5"><i class="bi bi-star-fill"></i></label>
-                    <input type="radio" id="mstar4" name="rating" value="4"><label for="mstar4"><i class="bi bi-star-fill"></i></label>
-                    <input type="radio" id="mstar3" name="rating" value="3"><label for="mstar3"><i class="bi bi-star-fill"></i></label>
-                    <input type="radio" id="mstar2" name="rating" value="2"><label for="mstar2"><i class="bi bi-star-fill"></i></label>
-                    <input type="radio" id="mstar1" name="rating" value="1"><label for="mstar1"><i class="bi bi-star-fill"></i></label>
+
+                <div class="mb-3">
+                    <label class="form-label small text-muted mb-2">Your Rating</label>
+                    <div class="star-rating-input">
+                        <input type="radio" id="mstar5" name="rating" value="5" required>
+                        <label for="mstar5"><i class="bi bi-star-fill"></i></label>
+                        <input type="radio" id="mstar4" name="rating" value="4">
+                        <label for="mstar4"><i class="bi bi-star-fill"></i></label>
+                        <input type="radio" id="mstar3" name="rating" value="3">
+                        <label for="mstar3"><i class="bi bi-star-fill"></i></label>
+                        <input type="radio" id="mstar2" name="rating" value="2">
+                        <label for="mstar2"><i class="bi bi-star-fill"></i></label>
+                        <input type="radio" id="mstar1" name="rating" value="1">
+                        <label for="mstar1"><i class="bi bi-star-fill"></i></label>
+                    </div>
                 </div>
-                <textarea name="comment_text" rows="3" placeholder="Share your experience..." required></textarea>
-                <input type="file" name="comment_image" accept="image/*" style="margin-bottom:10px;font-size:0.85rem;">
-                <button type="submit" class="btn-submit-review">Post Review</button>
+
+                <div class="mb-3">
+                    <textarea name="comment_text" class="form-control" rows="3" placeholder="Share your experience..." required style="border-radius:10px;resize:none;"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small text-muted">Attach an image (optional)</label>
+                    <input type="file" name="comment_image" class="form-control" accept="image/*" onchange="previewImage(this)" style="font-size:0.85rem;">
+                    <img id="imagePreviewMobile" class="comment-image-preview" alt="Preview">
+                </div>
+
+                <button type="submit" class="btn-cta-primary" style="border-radius:10px;">Post Comment</button>
             </form>
         </div>
+        <?php endif; ?>
 
+        <!-- Existing Comments -->
         <?php foreach($comments as $comment): 
             $initials = getInitials($comment['full_name']);
             $time_ago = timeAgo($comment['created_at']);
+            $can_delete = ($current_user_id == $comment['user_id']);
         ?>
-        <div class="review-card">
-            <div class="review-header">
-                <div class="review-avatar"><?php echo $initials; ?></div>
-                <div class="review-meta">
-                    <div class="review-name"><?php echo htmlspecialchars($comment['full_name']); ?></div>
-                    <div class="review-time"><?php echo $time_ago; ?></div>
-                </div>
-                <div class="review-stars">
-                    <?php for($i=1; $i<=5; $i++): ?>
-                        <i class="bi bi-star<?php echo $i <= $comment['rating'] ? '-fill' : ' empty'; ?>"></i>
-                    <?php endfor; ?>
-                </div>
-            </div>
-            <p class="review-text"><?php echo htmlspecialchars($comment['comment_text']); ?></p>
-            <?php if(!empty($comment['image_path'])): ?>
-                <img src="<?php echo htmlspecialchars($comment['image_path']); ?>" class="review-image" alt="Review photo">
+        <div class="comment-card" id="comment-<?php echo (int)$comment['comment_id']; ?>">
+            <?php if ($can_delete): ?>
+            <button type="button" class="comment-delete-btn" onclick="deleteComment(<?php echo (int)$comment['comment_id']; ?>)" title="Delete your comment">
+                <i class="bi bi-trash3"></i> Delete
+            </button>
             <?php endif; ?>
+            <div class="comment-avatar"><?php echo $initials; ?></div>
+            <div class="comment-body">
+                <div class="comment-header">
+                    <div>
+                        <div class="comment-name"><?php echo htmlspecialchars($comment['full_name']); ?></div>
+                        <div class="comment-rating">
+                            <?php for($i=1; $i<=5; $i++): ?>
+                                <i class="bi bi-star<?php echo $i <= $comment['rating'] ? '-fill' : ' empty'; ?>"></i>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                    <span class="comment-time"><?php echo $time_ago; ?></span>
+                </div>
+                <?php if(!empty($comment['image_path'])): ?>
+                    <img src="<?php echo htmlspecialchars($comment['image_path']); ?>" class="comment-image" alt="Comment image">
+                <?php endif; ?>
+                <p class="comment-text"><?php echo htmlspecialchars($comment['comment_text']); ?></p>
+            </div>
         </div>
         <?php endforeach; ?>
     </div>
 </div>
 
 <!-- Mobile Sticky CTA -->
+<?php if (!$is_owner): ?>
 <div class="sticky-cta d-lg-none">
     <?php if (!empty($phone_link)): ?>
     <a href="<?php echo $phone_link; ?>" class="btn-cta-secondary">
@@ -1308,6 +1381,7 @@ function getDeliveryLabel($mode) {
         <i class="bi bi-chat-dots"></i> Message Seller
     </button>
 </div>
+<?php endif; ?>
 
 <!-- Lightbox -->
 <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox(event)">
@@ -1318,6 +1392,7 @@ function getDeliveryLabel($mode) {
     <div class="lightbox-counter" id="lightboxCounter">1 / 5</div>
 </div>
 
+<?php if (!$is_owner): ?>
 <!-- Message Modal -->
 <div class="modal fade" id="messageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1327,7 +1402,7 @@ function getDeliveryLabel($mode) {
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <p class="text-muted small mb-3"><?php echo htmlspecialchars($service['category']); ?> &bull; <?php echo htmlspecialchars($service['service_type']); ?></p>
+                <p class="text-muted small mb-3"><?php echo $category_display; ?></p>
                 <form action="send_message.php" method="POST">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     <input type="hidden" name="listing_id" value="<?php echo (int)$listing_id; ?>">
@@ -1342,33 +1417,50 @@ function getDeliveryLabel($mode) {
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Gallery data
+// ===== GALLERY DATA =====
 const galleryImages = <?php echo json_encode(array_column($gallery_images, 'image_path')); ?>;
-let currentHeroIndex = 0;
 
-function setHero(index) {
+// ===== MOBILE GALLERY =====
+let currentMobileIndex = 0;
+
+function setHeroMobile(index) {
     if (index < 0 || index >= galleryImages.length) return;
-    currentHeroIndex = index;
-    const img = document.getElementById('heroImg') || document.getElementById('desktopHeroImg');
+    currentMobileIndex = index;
+    const img = document.getElementById('heroImgMobile');
     if (img) img.src = galleryImages[index];
 
-    // Update thumbnails
-    document.querySelectorAll('.thumb-item').forEach((thumb, i) => {
-        thumb.classList.toggle('active', i === index);
-    });
+    const strip = document.getElementById('mobileThumbStrip');
+    if (strip) {
+        strip.querySelectorAll('.thumb-item').forEach((thumb, i) => {
+            thumb.classList.toggle('active', i === index);
+        });
+    }
 }
 
-function changeHero(dir) {
-    let newIndex = currentHeroIndex + dir;
-    if (newIndex < 0) newIndex = galleryImages.length - 1;
-    if (newIndex >= galleryImages.length) newIndex = 0;
-    setHero(newIndex);
+
+// ===== DESKTOP GALLERY =====
+let currentDesktopIndex = 0;
+
+function setHeroDesktop(index) {
+    if (index < 0 || index >= galleryImages.length) return;
+    currentDesktopIndex = index;
+    const img = document.getElementById('heroImgDesktop');
+    if (img) img.src = galleryImages[index];
+
+    const strip = document.getElementById('desktopThumbStrip');
+    if (strip) {
+        strip.querySelectorAll('.thumb-item').forEach((thumb, i) => {
+            thumb.classList.toggle('active', i === index);
+        });
+    }
 }
 
-// Lightbox
+
+// ===== LIGHTBOX =====
 let currentLightboxIndex = 0;
 
 function openLightbox(index) {
@@ -1381,7 +1473,14 @@ function openLightbox(index) {
 }
 
 function closeLightbox(e) {
-    if (e && e.target !== e.currentTarget && !e.target.classList.contains('lightbox-close')) return;
+    // Always close if clicking the close button itself
+    if (e && (e.target.closest('.lightbox-close') || e.target.classList.contains('lightbox-close'))) {
+        document.getElementById('lightbox').classList.remove('active');
+        document.body.style.overflow = '';
+        return;
+    }
+    // Close if clicking the overlay background (not the image or nav buttons)
+    if (e && e.target !== e.currentTarget) return;
     document.getElementById('lightbox').classList.remove('active');
     document.body.style.overflow = '';
 }
@@ -1404,10 +1503,52 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') changeImage(1);
 });
 
-// Review form toggle
-function toggleReviewForm() {
-    const form = document.getElementById('reviewForm') || document.getElementById('reviewFormMobile');
-    if (form) form.classList.toggle('active');
+// ===== COMMENT IMAGE PREVIEW =====
+function previewImage(input) {
+    var preview = document.getElementById('imagePreview') || document.getElementById('imagePreviewMobile');
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// ===== DELETE COMMENT =====
+function deleteComment(commentId) {
+    if (!confirm('Are you sure you want to delete your comment? This cannot be undone.')) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('comment_id', commentId);
+    formData.append('csrf_token', '<?php echo htmlspecialchars($csrf_token); ?>');
+
+    fetch('delete_comment.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const commentEl = document.getElementById('comment-' + commentId);
+            if (commentEl) {
+                commentEl.style.transition = 'opacity 0.3s, transform 0.3s';
+                commentEl.style.opacity = '0';
+                commentEl.style.transform = 'translateX(-20px)';
+                setTimeout(() => commentEl.remove(), 300);
+            }
+            // Optionally update average rating display here if you want live updates
+        } else {
+            alert(data.message || 'Failed to delete comment. Please try again.');
+        }
+    })
+    .catch(err => {
+        console.error('Delete error:', err);
+        alert('Something went wrong. Please try again.');
+    });
 }
 
 // Register Service Worker

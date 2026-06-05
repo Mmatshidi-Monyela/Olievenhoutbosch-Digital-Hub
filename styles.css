@@ -402,3 +402,56 @@ body {
 .step-card:nth-child(3) {
   animation-delay: 0.3s;
 }
+/* ============================================
+   RESPONSIVE NAVBAR TEXT SWAP (safe additive)
+   ============================================ */
+
+/* Mobile: show short name, hide full name */
+@media (max-width: 575.98px) {
+  .brand-text.full-name {
+    display: none !important;
+  }
+  .brand-text.short-name {
+    display: inline !important;
+  }
+}
+
+/* Desktop: show full name, hide short name */
+@media (min-width: 576px) {
+  .brand-text.full-name {
+    display: inline !important;
+  }
+  .brand-text.short-name {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   NAVBAR BRAND SHRINK FIX (safe additive)
+   ============================================ */
+
+/* Only apply to top-nav pages (index, main, etc) */
+.top-nav .navbar-brand {
+  min-width: 0;
+  flex-shrink: 1;
+  max-width: calc(100% - 80px);
+  overflow: hidden;
+}
+
+.top-nav .navbar-brand .brand-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ============================================
+   REGISTER/LOGIN CARD MOBILE FIX (safe additive)
+   ============================================ */
+
+/* Auth pages use container-fluid for full width on mobile */
+@media (max-width: 575.98px) {
+  .container-fluid .col-12 > .card {
+    border-radius: 0.75rem;
+  }
+}

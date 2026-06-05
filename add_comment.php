@@ -50,14 +50,19 @@ if (strlen($comment_text) > 1000) {
     $errors[] = 'Comment is too long (max 1000 characters).';
 }
 
-// Verify listing exists
+// Verify listing exists and get owner info
+$listing_info = null;
 if (empty($errors) && $conn) {
-    $listing_stmt = mysqli_prepare($conn, "SELECT listing_id FROM listing WHERE listing_id = ? AND is_active = 1");
+    $listing_stmt = mysqli_prepare($conn, "SELECT l.listing_id, l.listing_name, l.user_id as owner_id, u.full_name as owner_name 
+        FROM listing l 
+        JOIN useraccount u ON l.user_id = u.user_id 
+        WHERE l.listing_id = ? AND l.is_active = 1");
     if ($listing_stmt) {
         mysqli_stmt_bind_param($listing_stmt, "i", $listing_id);
         mysqli_stmt_execute($listing_stmt);
         $listing_result = mysqli_stmt_get_result($listing_stmt);
-        if (!mysqli_fetch_assoc($listing_result)) {
+        $listing_info = mysqli_fetch_assoc($listing_result);
+        if (!$listing_info) {
             $errors[] = 'Listing not found.';
         }
         mysqli_stmt_close($listing_stmt);
@@ -171,6 +176,20 @@ if (empty($errors) && $conn) {
 
             if ($success) {
                 $_SESSION['success_msg'] = 'Your review has been posted.';
+
+                // ===== NOTIFY LISTING OWNER =====
+                if ($listing_info && $listing_info['owner_id'] != $user_id) {
+                    $notif_title = "New Review on Your Listing";
+                    $notif_message = "Your listing \"" . $listing_info['listing_name'] . "\" received a new " . $rating . "-star review.";
+                    $notif_link = "view_service.php?id=" . $listing_id;
+
+                    $notif_stmt = mysqli_prepare($conn, "INSERT INTO notification (user_id, title, message, type, link, created_at) VALUES (?, ?, ?, 'info', ?, NOW())");
+                    if ($notif_stmt) {
+                        mysqli_stmt_bind_param($notif_stmt, "isss", $listing_info['owner_id'], $notif_title, $notif_message, $notif_link);
+                        mysqli_stmt_execute($notif_stmt);
+                        mysqli_stmt_close($notif_stmt);
+                    }
+                }
             } else {
                 $_SESSION['error_msg'] = 'Failed to post review. Please try again.';
                 error_log("Comment insert failed: " . mysqli_error($conn));

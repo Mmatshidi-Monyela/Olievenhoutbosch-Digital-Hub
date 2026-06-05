@@ -85,7 +85,7 @@ function timeAgo($datetime) {
 }
 
 // Icon map
-$icons = ['success' => 'check-circle', 'danger' => 'exclamation-triangle', 'info' => 'chat-left-text'];
+$icons = ['success' => 'check-circle', 'danger' => 'exclamation-triangle', 'info' => 'chat-left-text', 'warning' => 'bell'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -98,8 +98,8 @@ $icons = ['success' => 'check-circle', 'danger' => 'exclamation-triangle', 'info
     <style>
         :root { --plum: #230344; --rose-gold: #c99383; }
         body { background: #e6e6e6; font-family: "Segoe UI", sans-serif; }
-        .navbar-custom { background: var(--plum); border-bottom: 3px solid var(--rose-gold); padding: 12px 20px; }
-        .brand-text { font-size: 1.1rem; font-weight: bold; color: white; }
+        .navbar-custom { background: var(--plum); border-bottom: 3px solid var(--rose-gold); padding: 12px 20px; height: 56px; display: flex; align-items: center;;}
+        
         .back-link { color: white; text-decoration: none; font-size: 0.9rem; }
         .back-link:hover { opacity: 0.8; color: white; }
         .main-content { padding: 30px 50px 50px; }
@@ -124,17 +124,30 @@ $icons = ['success' => 'check-circle', 'danger' => 'exclamation-triangle', 'info
         .empty-state { text-align: center; padding: 60px; background: white; border-radius: 12px; }
         .empty-state i { font-size: 3rem; color: var(--rose-gold); }
         @media (max-width: 768px) { .main-content { padding: 20px; } }
-    </style>
+    
+        /* Responsive brand text - matches listing_dashboard */
+        .brand-text { font-size: 1rem; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .brand-text-mobile { display: inline; font-size: 0.85rem; }
+        .brand-text-desktop { display: none; }
+        .back-text { display: none; }
+
+        @media (min-width: 576px) {
+            .brand-text-mobile { display: none; }
+            .brand-text-desktop { display: inline; }
+            .back-text { display: inline; }
+        }
+</style>
 </head>
 <body>
 
 <nav class="navbar navbar-custom sticky-top">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-        <a class="navbar-brand d-flex align-items-center" href="listing_dashboard.php">
-            <img src="images/logo.png" width="28" height="28" class="me-2">
-            <span class="brand-text">Olievenhoutbosch Digital Hub</span>
+    <div class="container-fluid d-flex justify-content-between align-items-center" style="max-width:1400px;margin:0 auto;width:100%;">
+        <a class="navbar-brand d-flex align-items-center" href="listing_dashboard.php" style="text-decoration:none;">
+            <img src="images/logo.png" width="28" height="28" class="me-2" style="flex-shrink:0;">
+            <span class="brand-text brand-text-mobile">Olievenhoutbosch DH</span>
+            <span class="brand-text brand-text-desktop">Olievenhoutbosch Digital Hub</span>
         </a>
-        <a href="listing_dashboard.php" class="back-link"><i class="bi bi-arrow-left me-1"></i>Back</a>
+        <a href="listing_dashboard.php" class="back-link"><i class="bi bi-arrow-left me-1"></i><span class="back-text">Back</span></a>
     </div>
 </nav>
 
@@ -162,8 +175,12 @@ $icons = ['success' => 'check-circle', 'danger' => 'exclamation-triangle', 'info
         <?php if ($filter !== 'all'): ?><a href="notifications.php" class="btn btn-sm btn-outline-primary mt-1" style="border-color:var(--plum);color:var(--plum)">View All</a><?php endif; ?>
     </div>
     <?php else: ?>
-        <?php foreach ($notifications as $n): ?>
-        <div class="notif-card <?php echo $n['is_read'] ? '' : 'unread'; ?>">
+        <?php foreach ($notifications as $n): 
+            $has_link = !empty($n['link']);
+            $card_tag = $has_link ? 'a' : 'div';
+            $card_attrs = $has_link ? 'href="' . htmlspecialchars($n['link']) . '" style="text-decoration:none;color:inherit;"' : '';
+        ?>
+        <<?php echo $card_tag; ?> <?php echo $card_attrs; ?> class="notif-card <?php echo $n['is_read'] ? '' : 'unread'; ?>">
             <div class="notif-icon <?php echo $n['type']; ?>"><i class="bi bi-<?php echo $icons[$n['type']] ?? 'bell'; ?>"></i></div>
             <div class="flex-grow-1" style="min-width:0">
                 <div class="notif-title"><?php echo htmlspecialchars($n['title']); ?></div>
@@ -173,14 +190,14 @@ $icons = ['success' => 'check-circle', 'danger' => 'exclamation-triangle', 'info
                     <?php if (!$n['is_read']): ?><span class="badge-new ms-2">NEW</span><?php endif; ?>
                 </div>
             </div>
-            <div class="d-flex gap-1">
+            <div class="d-flex gap-1" onclick="event.stopPropagation();">
                 <?php if (!$n['is_read']): ?>
                 <form method="POST"><input type="hidden" name="notif_id" value="<?php echo $n['notification_id']; ?>"><button type="submit" name="mark_read" class="btn-action" title="Mark read"><i class="bi bi-check-lg"></i></button></form>
                 <?php endif; ?>
-                <?php if (!empty($n['link'])): ?><a href="<?php echo htmlspecialchars($n['link']); ?>" class="btn-action" title="View"><i class="bi bi-box-arrow-up-right"></i></a><?php endif; ?>
-                <form method="POST" onsubmit="return confirm('Delete this notification?')"><input type="hidden" name="notif_id" value="<?php echo $n['notification_id']; ?>"><button type="submit" name="delete_notif" class="btn-action delete" title="Delete"><i class="bi bi-trash3"></i></button></form>
+                <?php if ($has_link): ?><a href="<?php echo htmlspecialchars($n['link']); ?>" class="btn-action" title="View" onclick="event.stopPropagation();"><i class="bi bi-box-arrow-up-right"></i></a><?php endif; ?>
+                <form method="POST" onsubmit="return confirm('Delete this notification?')" onclick="event.stopPropagation();"><input type="hidden" name="notif_id" value="<?php echo $n['notification_id']; ?>"><button type="submit" name="delete_notif" class="btn-action delete" title="Delete"><i class="bi bi-trash3"></i></button></form>
             </div>
-        </div>
+        </<?php echo $card_tag; ?>>
         <?php endforeach; ?>
     <?php endif; ?>
 </div>

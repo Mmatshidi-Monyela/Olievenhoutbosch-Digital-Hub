@@ -41,45 +41,134 @@ mysqli_free_result($listings_result);
     <style>
         :root {
             --plum: #230344;
-            --rose-gold: #f8c9c0;
+            --rose-gold: #c99383;
             --copper: #ba745f;
             --light-grey: #f4f7f6;
         }
 
-        body {
-            background-color: var(--light-grey);
-            font-family: 'Inter', sans-serif;
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            box-sizing: border-box;
         }
 
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            background-color: var(--light-grey);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #333;
+            margin: 0;
+        }
+
+        /* ===== NAVBAR ===== */
         .top-nav {
             background-color: var(--plum) !important;
-            min-height: 60px;
-            padding: 0.5rem 1rem;
+            height: 56px;
+            padding: 0 16px;
             border-bottom: 3px solid var(--rose-gold);
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .nav-brand-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 1;
+            min-width: 0;
+            text-decoration: none;
+        }
+
+        .nav-brand-section img {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
         }
 
         .brand-text {
-            font-size: 1.1rem;
-            font-weight: bold;
+            font-size: 1rem;
+            font-weight: 700;
             color: white;
             white-space: nowrap;
-            font-size: clamp(0.75rem, 2vw, 1.1rem);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
         }
 
-        .navbar .search-container {
+        .nav-search-section {
+            flex: 1;
+            max-width: 600px;
+            display: flex;
+            justify-content: center;
+            padding: 0 16px;
+        }
+
+        .search-container {
             background: white;
             border-radius: 50px;
             padding: 4px 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 600px;
             width: 100%;
+            display: flex;
+            align-items: center;
         }
 
-        .navbar .search-container .form-select,
-        .navbar .search-container .form-control {
+        .search-container .form-select,
+        .search-container .form-control {
+            font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+        }
+
+        .nav-actions-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .profile-avatar {
+            width: 36px; 
+            height: 36px; 
+            background-color: var(--rose-gold); 
+            color: var(--plum); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold;
+            flex-shrink: 0;
             font-size: 0.9rem;
         }
 
+        .profile-name {
+            font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0;
+            line-height: 1.2;
+        }
+
+        .profile-role {
+            font-size: clamp(0.6rem, 1vw, 0.7rem);
+            color: rgba(255,255,255,0.75);
+            margin-bottom: 0;
+            line-height: 1.2;
+        }
+
+        /* ===== CATEGORY BAR ===== */
         .cat-bar {
             background: #e9ecef;
             border-bottom: 1px solid #eee;
@@ -91,9 +180,7 @@ mysqli_free_result($listings_result);
             -ms-overflow-style: none;
         }
 
-        .cat-bar::-webkit-scrollbar {
-            display: none;
-        }
+        .cat-bar::-webkit-scrollbar { display: none; }
 
         .cat-bar-inner {
             display: flex;
@@ -102,18 +189,15 @@ mysqli_free_result($listings_result);
             min-width: max-content;
         }
 
-        .cat-item {
-            position: relative;
-            display: inline-block;
-        }
+        .cat-item { position: relative; display: inline-block; }
 
         .cat-btn {
             background: none;
             border: none;
             color: var(--plum);
             font-weight: 700;
-            font-size: 0.9rem;
-            padding: 0.4rem 1.2rem;
+            font-size: clamp(0.75rem, 1.8vw, 0.95rem);
+            padding: 0.4rem clamp(0.6rem, 1.5vw, 1.2rem);
             cursor: pointer;
             white-space: nowrap;
             display: flex;
@@ -121,18 +205,14 @@ mysqli_free_result($listings_result);
             gap: 6px;
         }
 
-        .cat-btn:hover {
-            color: var(--copper);
-        }
+        .cat-btn:hover { color: var(--copper); }
 
         .cat-btn i {
-            font-size: 0.7rem;
+            font-size: clamp(0.6rem, 1.2vw, 0.75rem);
             transition: transform 0.2s;
         }
 
-        .cat-btn.active i {
-            transform: rotate(180deg);
-        }
+        .cat-btn.active i { transform: rotate(180deg); }
 
         .cat-dropdown {
             display: none;
@@ -146,9 +226,7 @@ mysqli_free_result($listings_result);
             z-index: 99999;
         }
 
-        .cat-dropdown.show {
-            display: block;
-        }
+        .cat-dropdown.show { display: block; }
 
         .cat-dropdown a {
             display: block;
@@ -156,7 +234,7 @@ mysqli_free_result($listings_result);
             color: var(--plum);
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.9rem;
+            font-size: clamp(0.8rem, 1.5vw, 0.9rem);
         }
 
         .cat-dropdown a:hover {
@@ -167,184 +245,425 @@ mysqli_free_result($listings_result);
         .dropdown-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             z-index: 99998;
         }
 
-        .dropdown-overlay.show {
-            display: block;
+        .dropdown-overlay.show { display: block; }
+
+        /* ===== MOBILE SEARCH AREA ===== */
+        .mobile-search-area {
+            background-color: var(--plum);
+            padding: clamp(8px, 2vw, 14px) clamp(12px, 3vw, 16px);
+            display: none;
+        }
+        .mobile-search-area.show { display: block; }
+
+        /* ===== MAIN CONTENT ===== */
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: clamp(12px, 2vw, 24px);
         }
 
-        .listing-card {
-            background: #fff;
-            border-radius: 15px;
-            border: 1px solid #eee;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            height: 100%;
-            cursor: pointer;
-        }
-        .listing-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: clamp(12px, 2vw, 24px);
         }
 
-        .badge-verified {
-            background-color: var(--copper);
-            color: white;
-            padding: 2px 10px;
-            border-radius: 5px;
-            font-size: 0.75rem;
-        }
-
-        .badge-unverified {
-            background-color: #e9ecef;
-            color: #6c757d;
-            padding: 2px 10px;
-            border-radius: 5px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .badge-multi-ext {
-            background-color: #e3f2fd;
-            color: #0d47a1;
-            padding: 2px 8px;
-            border-radius: 5px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-
-        .ext-label {
-            font-size: 0.75rem;
-            color: #888;
-        }
-        .service-label {
-            font-size: 0.85rem;
-            color: #666;
-        }
-        .price-text {
-            color: var(--copper);
+        .results-title {
+            font-size: clamp(1rem, 2.5vw, 1.35rem);
             font-weight: 700;
-            margin-top: 10px;
-        }
-
-        .profile-avatar {
-            width: 35px; 
-            height: 35px; 
-            background-color: var(--rose-gold); 
-            color: var(--plum); 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold;
-            flex-shrink: 0;
+            color: var(--plum);
+            margin: 0;
         }
 
         .results-count {
             color: var(--plum);
             font-weight: 600;
+            font-size: clamp(0.8rem, 1.5vw, 0.95rem);
         }
 
+        /* ============================================================
+           SIMPLIFIED LISTING CARD DESIGN
+           ============================================================ */
+
+        /* ---- Mobile Cards ---- */
+        .mobile-listings {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(10px, 2.5vw, 16px);
+        }
+
+        .listing-card-mobile {
+            background: white;
+            border-radius: clamp(14px, 2.5vw, 20px);
+            padding: clamp(16px, 3.5vw, 24px);
+            box-shadow: 0 2px 8px rgba(35, 3, 68, 0.06);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            display: block;
+            border: 1px solid rgba(35, 3, 68, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .listing-card-mobile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--plum);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .listing-card-mobile:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(35, 3, 68, 0.1);
+        }
+
+        .listing-card-mobile:hover::before {
+            opacity: 1;
+        }
+
+        .listing-card-mobile:active {
+            transform: scale(0.98);
+        }
+
+        /* Title row: name + verification badge */
+        .card-mobile-title-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: clamp(10px, 2vw, 14px);
+        }
+
+        .card-mobile-title {
+            font-size: clamp(1.05rem, 3.2vw, 1.3rem);
+            font-weight: 700;
+            color: var(--plum);
+            margin: 0;
+            line-height: 1.25;
+            word-break: break-word;
+            flex: 1;
+        }
+
+        /* Verification badge - rectangle style matching view_service.php */
+        .status-badge {
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-weight: 600;
+            font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .status-unverified { background-color: #eee; color: #666; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-verified { background-color: #d4edda; color: #155724; }
+
+        /* Extensions row */
+        .card-mobile-exts {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: clamp(12px, 2.5vw, 18px);
+        }
+
+        .ext-pill-primary {
+            background: var(--plum);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+            font-weight: 600;
+        }
+
+        .ext-pill-secondary {
+            background: white;
+            color: var(--plum);
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-size: clamp(0.65rem, 1.4vw, 0.75rem);
+            font-weight: 500;
+            border: 1.5px solid var(--rose-gold);
+        }
+
+        .ext-pill-more {
+            background: #f5f0f7;
+            color: var(--plum);
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-size: clamp(0.65rem, 1.4vw, 0.75rem);
+            font-weight: 500;
+        }
+
+        /* Bottom row: price */
+        .card-mobile-bottom {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+            padding-top: clamp(10px, 2vw, 14px);
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .card-mobile-price {
+            font-size: clamp(1.15rem, 3.2vw, 1.5rem);
+            font-weight: 700;
+            color: var(--copper);
+            line-height: 1;
+        }
+
+        .card-mobile-price .price-label {
+            font-size: clamp(0.6rem, 1.2vw, 0.7rem);
+            color: #aaa;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .card-mobile-owner {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #999;
+            font-size: clamp(0.75rem, 1.8vw, 0.85rem);
+        }
+
+        .card-mobile-owner .owner-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--rose-gold);
+            color: var(--plum);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: clamp(0.6rem, 1.2vw, 0.7rem);
+            flex-shrink: 0;
+        }
+
+        /* ---- Desktop Cards ---- */
+        .desktop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(clamp(300px, 28vw, 360px), 1fr));
+            gap: clamp(18px, 2.5vw, 28px);
+        }
+
+        .listing-card-desktop {
+            background: white;
+            border-radius: clamp(14px, 2vw, 20px);
+            border: 1px solid rgba(35, 3, 68, 0.06);
+            padding: clamp(20px, 3vw, 28px);
+            height: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(35, 3, 68, 0.04);
+        }
+
+        .listing-card-desktop::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--plum);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .listing-card-desktop:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 32px rgba(35, 3, 68, 0.12);
+            border-color: rgba(35, 3, 68, 0.1);
+        }
+
+        .listing-card-desktop:hover::before {
+            opacity: 1;
+        }
+
+        .card-desktop-title-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .card-desktop-title {
+            font-size: clamp(1.05rem, 1.8vw, 1.2rem);
+            font-weight: 700;
+            color: var(--plum);
+            margin: 0;
+            line-height: 1.3;
+            word-break: break-word;
+            flex: 1;
+        }
+
+        .card-desktop-exts {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .card-desktop-bottom {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 10px;
+            padding-top: 14px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .card-desktop-price {
+            font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+            font-weight: 700;
+            color: var(--copper);
+            line-height: 1;
+        }
+
+        .card-desktop-price .price-label {
+            font-size: 0.65rem;
+            color: #aaa;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .card-desktop-owner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #999;
+            font-size: clamp(0.8rem, 1.2vw, 0.9rem);
+        }
+
+        .card-desktop-owner .owner-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--rose-gold);
+            color: var(--plum);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        /* ===== NO RESULTS ===== */
         .no-results {
             text-align: center;
-            padding: 60px 20px;
-            color: black;
+            padding: clamp(40px, 8vw, 80px) clamp(16px, 3vw, 32px);
+            color: #666;
         }
         .no-results i {
-            font-size: 3rem;
+            font-size: clamp(2rem, 5vw, 3.5rem);
             color: var(--plum);
-            margin-bottom: 15px;
+            margin-bottom: clamp(10px, 2vw, 20px);
+        }
+        .no-results h5 { font-size: clamp(1rem, 2.5vw, 1.35rem); }
+        .no-results p { font-size: clamp(0.85rem, 1.5vw, 1rem); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 991.98px) {
+            .nav-search-section { display: none !important; }
+            .profile-name, .profile-role { display: none !important; }
+            .desktop-grid { display: none !important; }
         }
 
-        @media (max-width: 1024px) {
-            .search-container {
-                max-width: 350px;
-            }
-            .brand-text {
-                max-width: 200px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-        }
-
-        @media (max-width: 991px) {
-            .navbar .search-container {
-                display: none !important;
-            }
-            .mobile-search-area {
-                background-color: var(--plum);
-                padding: 15px;
-                display: none;
-            }
-            .mobile-search-area.show {
-                display: block;
+        @media (min-width: 768px) and (max-width: 991.98px) {
+            .mobile-listings {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr);
+                gap: clamp(12px, 2vw, 18px);
             }
         }
 
-        @media (max-width: 576px) {
-            .brand-text {
-                font-size: 0.85rem;
-            }
-            .listing-card {
-                padding: 1rem !important;
-            }
-            .listing-card h5 {
-                font-size: 1rem;
-            }
+        @media (max-width: 575.98px) {
+            .top-nav { height: 52px; padding: 0 12px; }
+            .nav-inner { gap: 8px; }
+            .brand-text { font-size: 0.85rem; }
+            .profile-avatar { width: 34px; height: 34px; font-size: 0.85rem; }
         }
 
-        @media (max-width: 480px) {
-            .brand-text {
-                display: block;
-                max-width: 140px;
-                line-height: 1.2;
-            }
+        @media (max-width: 375px) {
+            .brand-text { font-size: 0.8rem; }
+            .nav-brand-section img { width: 24px; height: 24px; }
+        }
+
+        @media (min-width: 992px) {
+            .mobile-search-area, .mobile-listings { display: none !important; }
+            .top-nav { height: 60px; padding: 0 clamp(16px, 2vw, 32px); }
+        }
+
+        @media (min-width: 1400px) {
+            .page-container { max-width: 1500px; }
         }
     </style>
 </head>
 <body>
+    <!-- Navbar -->
     <nav class="navbar top-nav sticky-top">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <img src="images/logo.png" width="30" height="30" alt="logo" class="me-2">
-                <span class="brand-text d-inline">Olievenhoutbosch Digital Hub</span>
+        <div class="nav-inner">
+            <a class="nav-brand-section" href="index.php">
+                <img src="images/logo.png" alt="logo">
+                <span class="brand-text">Olievenhoutbosch Digital Hub</span>
             </a>
 
-            <div class="search-container d-none d-lg-flex align-items-center mx-auto" id="desktopSearch">
-                <select class="form-select border-0 bg-transparent fw-bold" id="desktopExt" style="width: 100px; color: var(--plum);">
-                    <option value="" selected>Ext...</option>
-                    <option>Ext 4</option>
-                    <option>Ext 13</option>
-                    <option>Ext 15</option>
-                    <option>Ext 19</option>
-                    <option>Ext 20</option>
-                    <option>Ext 21</option>
-                    <option>Ext 22</option>
-                    <option>Ext 23</option>
-                    <option>Ext 24</option>
-                    <option>Ext 25</option>
-                    <option>Ext 26</option>
-                    <option>Ext 36</option>
-                </select>
-                <div class="vr mx-2" style="height: 20px;"></div>
-                <input type="text" class="form-control border-0 shadow-none bg-transparent" id="desktopSearchInput" placeholder="Search for listings..." oninput="handleSearch()">
-                <button class="btn btn-primary rounded-pill px-3 py-1 ms-2" onclick="handleSearch()">Search</button>
+            <div class="nav-search-section d-none d-lg-flex">
+                <div class="search-container">
+                    <select class="form-select border-0 bg-transparent fw-bold" id="desktopExt" style="width: clamp(80px, 10vw, 110px); color: var(--plum); flex-shrink:0;">
+                        <option value="" selected>Ext...</option>
+                        <option>Ext 4</option>
+                        <option>Ext 13</option>
+                        <option>Ext 15</option>
+                        <option>Ext 19</option>
+                        <option>Ext 20</option>
+                        <option>Ext 21</option>
+                        <option>Ext 22</option>
+                        <option>Ext 23</option>
+                        <option>Ext 24</option>
+                        <option>Ext 25</option>
+                        <option>Ext 26</option>
+                        <option>Ext 36</option>
+                    </select>
+                    <div class="vr mx-2" style="height: 20px; flex-shrink:0;"></div>
+                    <input type="text" class="form-control border-0 shadow-none bg-transparent" id="desktopSearchInput" placeholder="Search for listings..." oninput="handleSearch()" style="min-width:0;">
+                    <button class="btn rounded-pill px-3 py-1 ms-2 flex-shrink-0" style="background:var(--rose-gold);color:var(--plum);border:none;font-weight:600;font-size:clamp(0.8rem,1.2vw,0.95rem);" onclick="handleSearch()">Search</button>
+                </div>
             </div>
 
-            <div class="d-flex align-items-center gap-2">
-                <button class="btn border-0 d-lg-none" type="button" onclick="toggleSearch()">
-                    <i class="bi bi-search text-white fs-4"></i>
+            <div class="nav-actions-section">
+                <button class="btn border-0 d-lg-none p-1" type="button" onclick="toggleSearch()">
+                    <i class="bi bi-search text-white" style="font-size:clamp(1.2rem,3vw,1.5rem);"></i>
                 </button>
-
                 <div class="dropdown">
                     <div class="d-flex align-items-center" role="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <div class="text-end me-2 d-none d-md-block text-white">
-                            <p class="mb-0 fw-bold" style="font-size: 0.8rem;"><?php echo htmlspecialchars($first_name); ?></p>
-                            <p class="mb-0 opacity-75" style="font-size: 0.65rem;"><?php echo $user_role_display; ?></p>
+                        <div class="text-end me-2 d-none d-lg-block">
+                            <p class="profile-name"><?php echo htmlspecialchars($first_name); ?></p>
+                            <p class="profile-role"><?php echo $user_role_display; ?></p>
                         </div>
                         <div class="profile-avatar"><?php echo $avatar_letter; ?></div>
                     </div>
@@ -364,9 +683,10 @@ mysqli_free_result($listings_result);
         </div>
     </nav>
 
+    <!-- Mobile Search Area -->
     <div class="mobile-search-area d-lg-none" id="searchArea">
-        <div class="search-container d-flex align-items-center bg-white rounded-pill p-2">
-            <select class="form-select border-0 bg-transparent fw-bold" id="mobileExt" style="width: 100px;">
+        <div class="search-container d-flex align-items-center bg-white rounded-pill p-2" style="max-width:600px;margin:0 auto;">
+            <select class="form-select border-0 bg-transparent fw-bold" id="mobileExt" style="width: clamp(80px, 22vw, 110px);font-size:clamp(0.8rem,2.5vw,0.95rem);flex-shrink:0;">
                 <option value="" selected>Ext...</option>
                 <option>Ext 4</option>
                 <option>Ext 13</option>
@@ -381,13 +701,14 @@ mysqli_free_result($listings_result);
                 <option>Ext 26</option>
                 <option>Ext 36</option>
             </select>
-            <input type="text" class="form-control border-0 shadow-none" id="mobileSearchInput" placeholder="Search..." oninput="handleSearch()">
-            <button class="btn btn-primary rounded-pill" onclick="handleSearch()">Search</button>
+            <input type="text" class="form-control border-0 shadow-none" id="mobileSearchInput" placeholder="Search..." oninput="handleSearch()" style="font-size:clamp(0.85rem,2.5vw,1rem);min-width:0;">
+            <button class="btn rounded-pill px-3 flex-shrink-0" style="background:var(--rose-gold);color:var(--plum);font-weight:600;font-size:clamp(0.8rem,2.5vw,0.95rem);" onclick="handleSearch()">Search</button>
         </div>
     </div>
 
+    <!-- Category Bar -->
     <div class="cat-bar shadow-sm">
-        <div class="container">
+        <div class="container" style="max-width:1400px;">
             <div class="cat-bar-inner">
                 <div class="cat-item">
                     <button class="cat-btn" onclick="toggleCat(this, 'cat1')">
@@ -426,7 +747,7 @@ mysqli_free_result($listings_result);
                         Food & Essentials <i class="bi bi-chevron-down"></i>
                     </button>
                     <div class="cat-dropdown" id="cat4">
-                        <a href="#" onclick="filterByCategory('Bakery'); return false;">Bakery</a>
+                        <a href="#" onclick="filterByCategory('Baking'); return false;">Baking</a>
                         <a href="#" onclick="filterByCategory('Cooked & Prepared Meals'); return false;">Cooked & Prepared Meals</a>
                         <a href="#" onclick="filterByCategory('Fresh Produce'); return false;">Fresh Produce</a>
                         <a href="#" onclick="filterByCategory('Gas Refill'); return false;">Gas Refill</a>
@@ -450,31 +771,66 @@ mysqli_free_result($listings_result);
 
     <div class="dropdown-overlay" id="dropdownOverlay" onclick="closeAllCats()"></div>
 
-    <div class="container pt-3 pb-0">
-        <div class="d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold" style="color: var(--plum);">Available Listings</h6>
-            <span class="results-count small" id="resultsCount"></span>
+    <!-- Main Content -->
+    <div class="page-container">
+        <div class="results-header">
+            <h6 class="results-title">Available Listings</h6>
+            <span class="results-count" id="resultsCount"></span>
+        </div>
+
+        <!-- Mobile Listings -->
+        <div class="mobile-listings" id="mobileListings"></div>
+
+        <!-- Desktop Listings -->
+        <div class="desktop-grid" id="desktopListings"></div>
+
+        <!-- No Results -->
+        <div id="noResults" class="no-results" style="display: none;">
+            <i class="bi bi-search"></i>
+            <h5>No listings found</h5>
+            <p class="text-muted">Try adjusting your search or use the categories to narrow your results.</p>
         </div>
     </div>
-
-    <section class="services-section pt-3 pb-5">
-        <div class="container">
-            <div class="row g-3 justify-content-center" id="listingsGrid">
-            </div>
-            <div id="noResults" class="no-results" style="display: none;">
-                <i class="bi bi-search"></i>
-                <h5>No listings found</h5>
-            </div>
-        </div>
-    </section>
 
     <script>
         const listings = <?php echo json_encode(array_map(function($item) {
             $ext_display = 'Ext ' . $item['extension'];
             $has_multiple = false;
+            $ext_count = 1;
             if (!empty($item['service_extensions'])) {
                 $ext_display = 'Multiple Ext';
                 $has_multiple = true;
+                $ext_count = count(explode(',', $item['service_extensions'])) + 1;
+            }
+
+            // Determine listing type icon
+            $type_icon = 'bi-briefcase';
+            $type_label = 'Service';
+            if ($item['listing_type'] == 'product') {
+                $type_icon = 'bi-box-seam';
+                $type_label = 'Goods';
+            } elseif ($item['listing_type'] == 'both') {
+                $type_icon = 'bi-layers';
+                $type_label = 'Service & Goods';
+            }
+
+            // Delivery mode icon
+            $delivery_icon = 'bi-truck';
+            $delivery_modes_arr = [];
+            if (!empty($item['delivery_mode'])) {
+                $delivery_modes_arr = array_map('trim', explode(',', $item['delivery_mode']));
+            }
+            $primary_delivery = $delivery_modes_arr[0] ?? '';
+            $delivery_label = '';
+            if (strpos($primary_delivery, 'door') !== false || strpos($primary_delivery, 'deliver') !== false) {
+                $delivery_icon = 'bi-truck';
+                $delivery_label = 'Delivers';
+            } elseif (strpos($primary_delivery, 'pickup') !== false || strpos($primary_delivery, 'comes') !== false) {
+                $delivery_icon = 'bi-geo-alt';
+                $delivery_label = 'Pickup';
+            } elseif (strpos($primary_delivery, 'both') !== false) {
+                $delivery_icon = 'bi-arrow-left-right';
+                $delivery_label = 'Both';
             }
 
             return [
@@ -486,57 +842,106 @@ mysqli_free_result($listings_result);
                 'primaryExt' => $item['extension'],
                 'additionalExts' => $item['service_extensions'] ?? '',
                 'hasMultipleExt' => $has_multiple,
+                'extCount' => $ext_count,
                 'price' => $item['price_description'],
-                'verified' => $item['verification_status'] === 'Verified'
+                'verified' => $item['verification_status'] === 'Verified',
+                'pending' => $item['verification_status'] === 'Pending',
+                'typeIcon' => $type_icon,
+                'typeLabel' => $type_label,
+                'deliveryIcon' => $delivery_icon,
+                'deliveryLabel' => $delivery_label,
+                // Owner info intentionally hidden from listing cards
             ];
         }, $db_listings)); ?>;
 
         let currentCategoryFilter = '';
 
         function renderListings(filteredListings) {
-            const grid = document.getElementById('listingsGrid');
+            const mobileContainer = document.getElementById('mobileListings');
+            const desktopContainer = document.getElementById('desktopListings');
             const noResults = document.getElementById('noResults');
             const resultsCount = document.getElementById('resultsCount');
 
-            grid.innerHTML = '';
+            mobileContainer.innerHTML = '';
+            desktopContainer.innerHTML = '';
 
             if (filteredListings.length === 0) {
-                grid.style.display = 'none';
+                mobileContainer.style.display = 'none';
+                desktopContainer.style.display = 'none';
                 noResults.style.display = 'block';
                 resultsCount.textContent = '0 results';
                 return;
             }
 
-            grid.style.display = 'flex';
+            mobileContainer.style.display = '';
+            desktopContainer.style.display = '';
             noResults.style.display = 'none';
             resultsCount.textContent = filteredListings.length + ' result' + (filteredListings.length !== 1 ? 's' : '');
 
             filteredListings.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'col-12 col-sm-6 col-lg-4';
-                const badgeHtml = item.verified 
-                    ? '<span class="badge-verified">Verified</span>'
-                    : '<span class="badge-unverified">Unverified</span>';
+                // Verification badge - rectangle style matching view_service.php
+                let statusClass = 'status-unverified';
+                let statusText = 'Unverified';
+                if (item.verified) {
+                    statusClass = 'status-verified';
+                    statusText = 'Verified';
+                } else if (item.pending) {
+                    statusClass = 'status-pending';
+                    statusText = 'Pending';
+                }
+                const verifiedBadge = '<span class="status-badge ' + statusClass + '">' + statusText + '</span>';
 
-                let extHtml = '<span class="ext-label text-uppercase fw-bold text-muted small">' + item.ext + '</span>';
-                if (item.hasMultipleExt) {
-                    extHtml = '<span class="badge-multi-ext">' + item.ext + '</span>';
+                // Build extension pills
+                let extPillsHtml = '<span class="ext-pill-primary">Ext ' + item.primaryExt + '</span>';
+                if (item.hasMultipleExt && item.additionalExts) {
+                    const additional = item.additionalExts.split(',');
+                    if (additional.length > 0) {
+                        extPillsHtml += '<span class="ext-pill-secondary">Ext ' + additional[0] + '</span>';
+                    }
+                    if (additional.length > 1) {
+                        extPillsHtml += '<span class="ext-pill-more">+' + (additional.length - 1) + ' more</span>';
+                    }
                 }
 
-                card.innerHTML = `
-                    <a href="view_service.php?id=${item.id}" class="text-decoration-none">
-                        <div class="listing-card p-4 h-100">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                ${badgeHtml}
-                                ${extHtml}
-                            </div>
-                            <h5 class="fw-bold mb-1" style="color: var(--plum);">${item.name}</h5>
-                            <p class="service-label mb-0 text-muted small">Service: <span class="text-dark">${item.category}</span></p>
-                            <p class="price-text mt-2 fw-bold" style="color: var(--copper);">${item.price}</p>
+                // Mobile card - SIMPLIFIED
+                const mobileCard = document.createElement('a');
+                mobileCard.href = 'view_service.php?id=' + item.id;
+                mobileCard.className = 'listing-card-mobile';
+                mobileCard.innerHTML = `
+                    <div class="card-mobile-title-row">
+                        <h5 class="card-mobile-title">${item.name}</h5>
+                        ${verifiedBadge}
+                    </div>
+                    <div class="card-mobile-exts">${extPillsHtml}</div>
+                    <div class="card-mobile-bottom">
+                        <div class="card-mobile-price">
+                            <span class="price-label">Price</span>
+                            ${item.price}
                         </div>
-                    </a>
+
+                    </div>
                 `;
-                grid.appendChild(card);
+                mobileContainer.appendChild(mobileCard);
+
+                // Desktop card - SIMPLIFIED
+                const desktopCard = document.createElement('a');
+                desktopCard.href = 'view_service.php?id=' + item.id;
+                desktopCard.className = 'listing-card-desktop';
+                desktopCard.innerHTML = `
+                    <div class="card-desktop-title-row">
+                        <h5 class="card-desktop-title">${item.name}</h5>
+                        ${verifiedBadge}
+                    </div>
+                    <div class="card-desktop-exts">${extPillsHtml}</div>
+                    <div class="card-desktop-bottom">
+                        <div class="card-desktop-price">
+                            <span class="price-label">Price</span>
+                            ${item.price}
+                        </div>
+
+                    </div>
+                `;
+                desktopContainer.appendChild(desktopCard);
             });
         }
 
@@ -595,14 +1000,11 @@ mysqli_free_result($listings_result);
             const dropdown = document.getElementById(dropdownId);
             const overlay = document.getElementById('dropdownOverlay');
             const isOpen = dropdown.classList.contains('show');
-
             closeAllCats();
-
             if (!isOpen) {
                 const rect = btn.getBoundingClientRect();
                 dropdown.style.top = (rect.bottom + 5) + 'px';
                 dropdown.style.left = rect.left + 'px';
-
                 dropdown.classList.add('show');
                 btn.classList.add('active');
                 overlay.classList.add('show');

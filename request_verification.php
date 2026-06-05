@@ -1,17 +1,42 @@
 <?php
 session_start();
 
-include 'includes/db_connect.php';
-/** @var mysqli $conn */
+// Auth check
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
-$listing_id = $_GET['id'] ?? 0;
-$user_id = $_SESSION['user_id'] ?? 0;
+$user_id = $_SESSION['user_id'];
+$listing_id = intval($_GET['id'] ?? 0);
 
-// Get listing details with calculated average rating from comment table
+if ($listing_id <= 0) {
+    $_SESSION['verify_msg'] = "Invalid listing.";
+    header("Location: listing_dashboard.php");
+    exit();
+}
+
+// DB connection
+$conn = null;
+if (file_exists('includes/db_connect.php')) {
+    include 'includes/db_connect.php';
+}
+
+if (!$conn) {
+    $_SESSION['verify_msg'] = "Database connection failed.";
+    header("Location: listing_details_owner.php?id=" . $listing_id);
+    exit();
+}
+
+// Fetch listing with calculated average rating
 $stmt = mysqli_prepare($conn, "
-    SELECT l.listing_id, l.verification_status, COALESCE(AVG(c.rating), 0) as avg_rating
+    SELECT 
+        l.listing_id, 
+        l.verification_status,
+        COALESCE(AVG(c.rating), 0) as avg_rating,
+        COUNT(c.comment_id) as review_count
     FROM listing l
-    LEFT JOIN comment c ON l.listing_id = c.listing_id AND c.rating > 0
+    LEFT JOIN comments c ON l.listing_id = c.listing_id
     WHERE l.listing_id = ? AND l.user_id = ?
     GROUP BY l.listing_id, l.verification_status
 ");
@@ -23,20 +48,30 @@ if ($row = mysqli_fetch_assoc($result)) {
     // Check if already pending or verified
     if ($row['verification_status'] == 'Pending') {
         $_SESSION['verify_msg'] = "Your verification request is already pending admin review.";
-        header("Location: business_details_owner.php?id=" . $listing_id);
+        header("Location: listing_details_owner.php?id=" . $listing_id);
         exit();
     }
 
     if ($row['verification_status'] == 'Verified') {
         $_SESSION['verify_msg'] = "Your listing is already verified!";
-        header("Location: business_details_owner.php?id=" . $listing_id);
+        header("Location: listing_details_owner.php?id=" . $listing_id);
         exit();
     }
 
-    // Check minimum rating requirement (4.0) using calculated average from comments
-    if ($row['avg_rating'] < 4.0) {
-        $_SESSION['verify_msg'] = "You don't qualify yet. Your average rating is " . round($row['avg_rating'], 1) . ". You need at least 4.0 stars. Check the verification tip.";
-        header("Location: business_details_owner.php?id=" . $listing_id);
+    // Check minimum rating requirement (4.0) — FIX: handle NULL with COALESCE
+    $avg_rating = floatval($row['avg_rating']);
+    $review_count = intval($row['review_count']);
+
+    if ($avg_rating < 4.0) {
+        $_SESSION['verify_msg'] = "You don't qualify yet. Your average rating is " . round($avg_rating, 1) . " based on " . $review_count . " review(s). You need at least 4.0 stars. Check the verification tip.";
+        header("Location: listing_details_owner.php?id=" . $listing_id);
+        exit();
+    }
+
+    // Also require at least 1 review (optional but recommended)
+    if ($review_count < 1) {
+        $_SESSION['verify_msg'] = "You need at least 1 review before requesting verification.";
+        header("Location: listing_details_owner.php?id=" . $listing_id);
         exit();
     }
 
@@ -55,6 +90,13 @@ if ($row = mysqli_fetch_assoc($result)) {
 }
 
 mysqli_stmt_close($stmt);
-header("Location: business_details_owner.php?id=" . $listing_id);
+header("Location: listing_details_owner.php?id=" . $listing_id);
 exit();
 ?>
+
+
+
+
+
+
+

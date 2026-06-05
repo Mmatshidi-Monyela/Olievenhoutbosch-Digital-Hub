@@ -71,17 +71,36 @@ if (isset($_SESSION['provider_notification'])) {
 
         .top-nav {
             background-color: var(--plum) !important;
-            min-height: 60px;
-            padding: 0.5rem 1rem;
+            height: 56px;
+            padding: 0 16px;
             border-bottom: 3px solid var(--rose-gold);
+            display: flex;
+            align-items: center;
         }
 
         .brand-text {
-            font-size: 1.1rem;
-            font-weight: bold;
+            font-size: 1rem;
+            font-weight: 700;
             color: white;
             white-space: nowrap;
-            font-size: clamp(0.75rem, 2vw, 1.1rem);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* Shortened brand on small screens */
+        .brand-short {
+            display: none;
+        }
+        @media (max-width: 575.98px) {
+            .brand-text {
+                display: none;
+            }
+            .brand-short {
+                display: inline;
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: white;
+                white-space: nowrap;
+            }
         }
 
         .dashboard-header { 
@@ -90,22 +109,64 @@ if (isset($_SESSION['provider_notification'])) {
             margin-top: 20px; 
         }
 
+        /* ===== SIMPLIFIED LISTING CARD ===== */
         .listing-card {
             background: white;
-            border-radius: 15px;
+            border-radius: 16px;
             border: none;
             overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
+            box-shadow: 0 2px 8px rgba(35, 3, 68, 0.06);
+            transition: all 0.25s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: inherit;
         }
         .listing-card:hover { 
-            transform: translateY(-10px); 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 24px rgba(35, 3, 68, 0.1);
+        }
+        .listing-card:active {
+            transform: scale(0.98);
         }
 
-        .badge-verified { background-color: var(--rose-gold); color: white; }
-        .badge-pending { background-color: #ffc107; color: #000; }
-        .badge-unverified { background-color: #6c757d; color: white; }
+        .card-title {
+            color: var(--plum);
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+
+        .status-verified { background-color: #d4edda; color: #155724; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-unverified { background-color: #eee; color: #666; }
+        .status-badge {
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+
+        .btn-manage {
+            border: 1.5px solid var(--plum);
+            color: var(--plum);
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 8px 20px;
+            background: transparent;
+            transition: all 0.2s ease;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+        .btn-manage:hover {
+            background-color: var(--plum);
+            color: white;
+        }
 
         .btn-register {
             background-color: var(--rose-gold);
@@ -114,26 +175,21 @@ if (isset($_SESSION['provider_notification'])) {
             font-weight: bold;
             border: none;
             padding: 10px 20px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
         }
         .btn-register:hover { 
             background-color: var(--copper); 
             opacity: 0.9;
             color: white; 
         }
-
-        .text-price { 
-            color: var(--copper); font-weight: bold; 
-        }
-
-        .btn-outline-plum {
-            border: 1px solid var(--plum);
-            color: var(--plum);
-            border-radius: 8px;
-        }
-
-        .btn-outline-plum:hover {
-            background-color: var(--plum);
-            color: white;
+        /* Smaller button on mobile */
+        @media (max-width: 575.98px) {
+            .btn-register {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                border-radius: 6px;
+            }
         }
 
         .main-content {
@@ -173,31 +229,6 @@ if (isset($_SESSION['provider_notification'])) {
             color: #155724;
         }
 
-        .photo-badge {
-            font-size: 0.75rem;
-            color: #888;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .ext-badge {
-            font-size: 0.75rem;
-            background: #e3f2fd;
-            color: #0d47a1;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-
-        @media (max-width: 1024px) {
-            .brand-text {
-                max-width: 200px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-        }
-
         @media (max-width: 991px) {
             .main-content { padding-left: 20px; padding-right: 20px; }
         }
@@ -207,23 +238,16 @@ if (isset($_SESSION['provider_notification'])) {
                 font-size: 0.85rem;
             }
         }
-
-        @media (max-width: 480px) {
-            .brand-text {
-                display: block;
-                max-width: 140px;
-                line-height: 1.2;
-            }
-        }
     </style>
 </head>
 <body>
 
     <nav class="navbar top-nav sticky-top">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <img src="images/logo.png" width="30" height="30" alt="logo" class="me-2">
-                <span class="brand-text d-inline">Olievenhoutbosch Digital Hub</span>
+        <div class="container-fluid d-flex justify-content-between align-items-center" style="max-width:1400px;margin:0 auto;width:100%;">
+            <a class="navbar-brand d-flex align-items-center" href="index.php" style="text-decoration:none;">
+                <img src="images/logo.png" width="28" height="28" alt="logo" class="me-2" style="flex-shrink:0;">
+                <span class="brand-text">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-short">Olievenhoutbosch DH</span>
             </a>
 
             <div class="d-flex align-items-center gap-2">
@@ -270,62 +294,29 @@ if (isset($_SESSION['provider_notification'])) {
             <a href="add_listing.php" class="btn btn-register">+ Add New Listing</a>
         </div>
 
-        <div class="row">
+        <div class="row g-4">
 
             <?php foreach($listings as $row): 
-                $photo_count = 0;
-                if ($conn) {
-                    $pc_res = mysqli_query($conn, "SELECT COUNT(*) as c FROM listing_images WHERE listing_id = " . intval($row['listing_id']));
-                    if ($pc_res) $photo_count = mysqli_fetch_assoc($pc_res)['c'] ?? 0;
-                }
-
-                $ext_display = 'Ext ' . $row['extension'];
-                $ext_badge = '';
-                if (!empty($row['service_extensions'])) {
-                    $ext_display = 'Multiple Ext';
-                    $ext_badge = '<span class="ext-badge">Multiple Ext</span>';
-                }
-
-                $statusClass = 'badge-unverified';
-                if ($row['verification_status'] == 'Verified') $statusClass = 'badge-verified';
-                if ($row['verification_status'] == 'Pending') $statusClass = 'badge-pending';
+                $statusClass = 'status-unverified';
+                if ($row['verification_status'] == 'Verified') $statusClass = 'status-verified';
+                if ($row['verification_status'] == 'Pending') $statusClass = 'status-pending';
             ?>
-                <div class="col-md-4 mb-4">
-                    <div class="card listing-card h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title fw-bold" style="color: var(--plum);"><?php echo htmlspecialchars($row['listing_name']); ?></h5>
-                                <span class="badge <?php echo $statusClass; ?>">
+                <div class="col-md-4 col-lg-3">
+                    <a href="listing_details_owner.php?id=<?php echo $row['listing_id']; ?>" class="listing-card">
+                        <div class="card-body d-flex flex-column justify-content-between" style="padding: 20px;">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">
+                                    <?php echo htmlspecialchars($row['listing_name']); ?>
+                                </h5>
+                                <span class="status-badge <?php echo $statusClass; ?>" style="font-size: 0.75rem; flex-shrink: 0; padding: 6px 12px;">
                                     <?php echo $row['verification_status']; ?>
                                 </span>
                             </div>
-
-                            <p class="text-muted small mb-1"><strong>Category:</strong> <?php echo htmlspecialchars($row['category']); ?></p>
-                            <p class="text-muted small mb-2">
-                                <strong>Location:</strong> 
-                                <?php echo $ext_badge ? $ext_badge : htmlspecialchars($ext_display); ?>
-                            </p>
-
-                            <p class="card-text text-secondary" style="font-size: 14px;">
-                                <?php echo htmlspecialchars($row['description']); ?>
-                            </p>
-
-                            <?php if ($photo_count > 0): ?>
-                            <div class="photo-badge mb-2">
-                                <i class="bi bi-images"></i>
-                                <span><?php echo $photo_count; ?> photo<?php echo $photo_count > 1 ? 's' : ''; ?></span>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="card-footer bg-transparent border-0 pb-3">
-                            <hr class="opacity-25">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-price"><?php echo htmlspecialchars($row['price_description']); ?></span>
-                                <a href="listing_details_owner.php?id=<?php echo $row['listing_id']; ?>" class="btn btn-sm btn-outline-plum px-3">Edit Details</a>
+                            <div class="mt-2 pt-3" style="border-top: 1px solid #f0f0f0;">
+                                <span class="btn-manage">Manage Listing</span>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             <?php endforeach; ?>
         </div>

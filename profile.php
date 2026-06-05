@@ -16,7 +16,6 @@ if (isset($_SERVER['HTTP_REFERER'])) {
     $from = $_SERVER['HTTP_REFERER'];
     $host = $_SERVER['HTTP_HOST'];
     
-    // Only internal pages, and not login/profile itself
     if (strpos($from, $host) !== false 
         && !str_contains($from, 'login.php') 
         && !str_contains($from, 'profile.php')) {
@@ -24,7 +23,6 @@ if (isset($_SERVER['HTTP_REFERER'])) {
     }
 }
 
-// Fetch real user data from database
 $stmt = mysqli_prepare($conn, "SELECT full_name, email, contact_number, extension, user_role FROM UserAccount WHERE user_id = ?");
 mysqli_stmt_bind_param($stmt, "i", $user_id);
 mysqli_stmt_execute($stmt);
@@ -37,7 +35,6 @@ if (!$user_data) {
     exit();
 }
 
-// Build user array for template
 $user = [
     'full_name' => $user_data['full_name'],
     'email' => $user_data['email'],
@@ -47,7 +44,6 @@ $user = [
     'avatar_letter' => strtoupper(substr($user_data['full_name'], 0, 1))
 ];
 
-// Role display label
 $role_labels = [
     'Provider'  => 'Service Provider',
     'Admin'     => 'System Administrator',
@@ -56,7 +52,6 @@ $role_labels = [
 ];
 $role_display = $role_labels[$user['user_role']] ?? 'Unknown Role';
 
-// Format contact number for display
 $contact_display = '';
 if (!empty($user['contact_number'])) {
     $digits = preg_replace('/[^0-9]/', '', $user['contact_number']);
@@ -80,9 +75,19 @@ if (!empty($user['contact_number'])) {
     <style>
         :root {
             --plum: #230344;
-            --rose-gold: #f8c9c0;
+            --rose-gold: #c99383;
+            --blush: #d8b2a7;
             --copper: #ba745f;
             --light-grey: #f4f7f6;
+        }
+
+        /* Brand name swap: full on desktop, short on mobile */
+        .brand-text.full-name { display: inline !important; }
+        .brand-text.short-name { display: none !important; }
+
+        @media (max-width: 575.98px) {
+            .brand-text.full-name { display: none !important; }
+            .brand-text.short-name { display: inline !important; }
         }
 
         body { 
@@ -98,11 +103,10 @@ if (!empty($user['contact_number'])) {
         }
 
         .brand-text {
-            font-size: 1.1rem;
+            font-size: clamp(0.75rem, 2vw, 1.1rem);
             font-weight: bold;
             color: white;
             white-space: nowrap;
-            font-size: clamp(0.75rem, 2vw, 1.1rem);
         }
 
         .profile-container { margin-top: 20px; }
@@ -193,26 +197,13 @@ if (!empty($user['contact_number'])) {
 
         .forgot-link:hover { color: var(--plum); text-decoration: underline; }
 
-        @media (max-width: 1024px) {
-            .brand-text {
-                max-width: 200px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-        }
+        /* Back button text swap */
+        .back-text { display: inline; }
+        .back-icon-only { display: none; }
 
-        @media (max-width: 576px) {
-            .brand-text {
-                font-size: 0.85rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .brand-text {
-                display: block;
-                max-width: 140px;
-                line-height: 1.2;
-            }
+        @media (max-width: 575.98px) {
+            .back-text { display: none; }
+            .back-icon-only { display: inline; }
         }
     </style>
 </head>
@@ -223,10 +214,12 @@ if (!empty($user['contact_number'])) {
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <a class="navbar-brand d-flex align-items-center" href="index.php">
                 <img src="images/logo.png" width="30" height="30" alt="logo" class="me-2">
-                <span class="brand-text d-inline">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text full-name">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text short-name">Olievenhoutbosch DH</span>
             </a>
             <a href="<?php echo htmlspecialchars($back_link); ?>" class="text-white text-decoration-none small d-flex align-items-center">
-                <i class="bi bi-arrow-left me-1"></i> Back
+                <i class="bi bi-arrow-left me-1 back-icon-only"></i>
+                <span class="back-text"><i class="bi bi-arrow-left me-1"></i> Back</span>
             </a>
         </div>
     </nav>
@@ -412,7 +405,7 @@ if (!empty($user['contact_number'])) {
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('sw.js')
                     .then((registration) => {
                         console.log('Service Worker registered:', registration.scope);
                     })

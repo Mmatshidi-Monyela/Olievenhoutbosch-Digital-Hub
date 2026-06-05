@@ -1,27 +1,48 @@
 // sw.js — Service Worker for Olievenhoutbosch Digital Hub
-// Caches visited pages so they work offline
-
 const CACHE_NAME = 'olieven-hub-v1';
-const STATIC_ASSETS = [
+
+const LOCAL_ASSETS = [
     '/',
     '/index.php',
     '/main.php',
     '/login.php',
     '/register.php',
-    '/offline.html',      // Fallback page
-    '/styles.css',
+    '/offline.html',
+    '/styles.css'
+];
+
+const CDN_ASSETS = [
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
-// Install: Cache static assets
+// Install: Cache local assets (skip missing ones), CDN assets (best effort)
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('Caching static assets');
-                return cache.addAll(STATIC_ASSETS);
+                // Cache local assets — skip any that fail (404, missing, etc.)
+                const localCache = Promise.allSettled(
+                    LOCAL_ASSETS.map(url => 
+                        cache.add(url).catch(err => {
+                            console.warn('SW: Failed to cache local asset:', url, err.message);
+                            return null; // Skip this one, don't break install
+                        })
+                    )
+                );
+
+                // Cache CDN assets — best effort, never fail install
+                const cdnCache = Promise.allSettled(
+                    CDN_ASSETS.map(url => 
+                        cache.add(url).catch(err => {
+                            console.warn('SW: Failed to cache CDN:', url, err.message);
+                            return null;
+                        })
+                    )
+                );
+
+                return Promise.all([localCache, cdnCache]);
             })
             .then(() => self.skipWaiting())
     );
@@ -40,44 +61,60 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch: Serve from cache, or fetch and cache
+// Fetch: Smart strategy based on request type
 self.addEventListener('fetch', (event) => {
-    // Skip non-GET requests
     if (event.request.method !== 'GET') return;
-    
-    // Skip cross-origin requests (like Google Fonts, external APIs)
+
     const url = new URL(event.request.url);
+
+    // Skip cross-origin requests that aren't CDNs
     if (url.origin !== location.origin && !url.hostname.includes('cdn')) {
         return;
     }
 
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            // Return cached version if available
-            if (cachedResponse) {
-                return cachedResponse;
-            }
+    // PHP pages & navigation: Network first, cache fallback
+    const isPHP = url.pathname.endsWith('.php') || url.pathname === '/';
+    const isNavigate = event.request.mode === 'navigate';
 
-            // Otherwise fetch from network
-            return fetch(event.request).then((response) => {
-                // Don't cache if not valid
-                if (!response || response.status !== 200 || response.type === 'error') {
+    if (isPHP || isNavigate) {
+        event.respondWith(
+            fetch(event.request)
+                .then((response) => {
+                    // Update cache with fresh version
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, clone);
+                    });
                     return response;
-                }
+                })
+                .catch(() => {
+                    return caches.match(event.request).then((cached) => {
+                        return cached || caches.match('/offline.html').then((offline) => {
+                            return offline || new Response(
+                                '<!DOCTYPE html><html><head><title>Offline</title></head><body style="font-family:sans-serif;text-align:center;padding:50px;"><h1>You are offline</h1><p>Please check your connection and try again.</p></body></html>',
+                                { headers: { 'Content-Type': 'text/html' } }
+                            );
+                        });
+                    });
+                })
+        );
+        return;
+    }
 
-                // Clone and cache the response
-                const responseToCache = response.clone();
+    // Static assets: Cache first, network fallback
+    event.respondWith(
+        caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+
+            return fetch(event.request).then((response) => {
+                if (!response || response.status !== 200) return response;
+
+                const clone = response.clone();
                 caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, responseToCache);
+                    cache.put(event.request, clone);
                 });
-
                 return response;
             });
-        }).catch(() => {
-            // Network failed — show offline page for navigation
-            if (event.request.mode === 'navigate') {
-                return caches.match('/offline.html');
-            }
         })
     );
 });

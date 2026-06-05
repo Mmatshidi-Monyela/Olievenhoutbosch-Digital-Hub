@@ -19,19 +19,23 @@ if (isset($_SESSION['user_id'])) {
 </head>
 <body>
     <nav class="navbar navbar-expand-lg top-nav sticky-top">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center ms-2" href="index.php">
-                <img src="images/logo.png" width="28" height="28" alt="logo" class="me-2">
-                <span class="brand-text fw-bold text-white">Olievenhoutbosch Digital Hub</span>
+        <div class="container-fluid px-2 px-sm-3">
+            <a class="navbar-brand d-flex align-items-center m-0" href="index.php">
+                <img src="images/logo.png" width="28" height="28" alt="logo">
+                <span class="brand-text fw-bold text-white d-none d-sm-inline ms-2">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text fw-bold text-white d-sm-none ms-1" style="font-size:0.8rem;">Olievenhoutbosch DH</span>
             </a>
-            <a href="login.php" class="btn btn-primary rounded-pill px-4">Account</a>
+            <a href="login.php" class="btn btn-primary rounded-pill px-2 px-sm-3 py-1 py-sm-2">
+                <span class="d-none d-sm-inline">Account</span>
+                <i class="bi bi-person d-sm-none fs-5"></i>
+            </a>
         </div>
     </nav>
 
     <header class="hero-section text-center">
         <div class="container">
             <h1 class="display-4 fw-bold">Your Neighbourhood, Digitized</h1>
-            <p class="lead mb-4">The central marketplace for all Olievenhoutbosch listings.</p>
+            <p class="lead mb-4">The central marketplace for all Olievenhoutbosch goods and services..</p>
             <a href="register.php" class="btn btn-primary btn-lg rounded-pill px-5 shadow">Get Started</a>
         </div>
     </header>
@@ -61,7 +65,7 @@ if (isset($_SESSION['user_id'])) {
                     <div class="step-card text-center">
                         <div class="step-icon"><i class="bi bi-hand-thumbs-up-fill"></i></div>
                         <h5>Review</h5>
-                        <p class="text-muted">Rate your experience to help others find great community members.</p>
+                        <p class="text-muted">Rate your experience to help others.</p>
                     </div>
                 </div>
             </div>
@@ -78,33 +82,33 @@ if (isset($_SESSION['user_id'])) {
                 <div class="col-6 col-md-4 col-lg-2">
                     <div class="service-card" onclick="location.href='#'">
                         <i class="bi bi-houses"></i>
-                        <h6>Construction</h6>
+                        <h6>Construction & Maintenance</h6>
                         <small>Plumbing, Painting, Tiling</small>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <div class="service-card" onclick="location.href='register.php'">
+                    <div class="service-card" onclick="location.href='#'">
                         <i class="bi bi-truck"></i>
                         <h6>Transport</h6>
                         <small>Bakkie Hire, School Transport</small>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <div class="service-card" onclick="location.href='register.php'">
+                    <div class="service-card" onclick="location.href='#'">
                         <i class="bi bi-key"></i>
                         <h6>Home & Rentals</h6>
                         <small>Backrooms, Appliance Repair</small>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <div class="service-card" onclick="location.href='register.php'">
+                    <div class="service-card" onclick="location.href='#'">
                         <i class="bi bi-egg-fried"></i>
-                        <h6>Food</h6>
+                        <h6>Food & Essentials</h6>
                         <small>Bakeries, Prepared Meals</small>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <div class="service-card" onclick="location.href='register.php'">
+                    <div class="service-card" onclick="location.href='#'">
                         <i class="bi bi-scissors"></i>
                         <h6>Personal Care</h6>
                         <small>Hair, Nails, Spa, Tailor</small>
@@ -125,7 +129,7 @@ if (isset($_SESSION['user_id'])) {
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('sw.js')
                     .then((registration) => {
                         console.log('Service Worker registered:', registration.scope);
                     })

@@ -10,6 +10,13 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// FIX: Clear stale flash messages from other pages (like update listing)
+// Only clear on fresh page loads (GET), not when viewing a specific thread
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['thread'])) {
+    unset($_SESSION['success_msg']);
+    unset($_SESSION['error_msg']);
+}
+
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['full_name'] ?? 'User';
 $user_type = $_SESSION['user_role'] ?? 'Customer';
@@ -253,7 +260,7 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
     <style>
         :root {
             --plum: #230344;
-            --rose-gold: #f8c9c0;
+            --rose-gold: #c99383;
             --copper: #ba745f;
             --light-grey: #f4f7f6;
         }
@@ -265,16 +272,21 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
 
         .top-nav {
             background-color: var(--plum) !important;
-            height: 60px;
-            padding: 0 1rem;
+            height: 56px;
+            padding: 0 16px;
             border-bottom: 3px solid var(--rose-gold);
+            display: flex;
+            align-items: center;
         }
 
         .brand-text {
-            font-size: 1.1rem;
-            font-weight: bold;
+            font-size: 0.95rem;
+            font-weight: 700;
             color: white;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
         }
 
         .back-link {
@@ -284,8 +296,20 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
             font-size: 0.9rem;
             display: flex;
             align-items: center;
+            gap: 4px;
         }
         .back-link:hover { opacity: 0.8; color: white; }
+
+        /* Brand name swap: full on desktop, short on mobile */
+        .brand-text.full-name { display: inline !important; }
+        .brand-text.short-name { display: none !important; }
+
+        @media (max-width: 575.98px) {
+            .brand-text.full-name { display: none !important; }
+            .brand-text.short-name { display: inline !important; }
+            .back-link span { display: none; }
+            .back-link { font-size: 1.1rem; padding: 8px; margin-right: -8px; }
+        }
 
         .messages-container {
             background: white;
@@ -478,6 +502,72 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
             }
         }
 
+        /* ===== MOBILE CHAT VIEW ===== */
+        @media (max-width: 991px) {
+            .messages-container {
+                position: relative;
+                overflow: hidden;
+            }
+            .thread-list {
+                border-right: none;
+                border-bottom: none;
+                max-height: none;
+                height: calc(100vh - 180px);
+            }
+            .chat-area-mobile {
+                display: none;
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: white;
+                z-index: 10;
+                border-radius: 15px;
+            }
+            .chat-area-mobile.active {
+                display: flex;
+                flex-direction: column;
+            }
+            .chat-messages {
+                max-height: none;
+                flex: 1;
+                overflow-y: auto;
+            }
+            .chat-header {
+                border-radius: 15px 15px 0 0;
+                flex-shrink: 0;
+            }
+            .chat-input-area {
+                border-radius: 0 0 15px 15px;
+                flex-shrink: 0;
+            }
+            .mobile-back-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background: none;
+                border: none;
+                color: var(--plum);
+                font-size: 0.9rem;
+                font-weight: 600;
+                padding: 4px 8px;
+                margin-right: 8px;
+                cursor: pointer;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .mobile-back-btn {
+                display: none !important;
+            }
+            .chat-area-mobile {
+                position: static !important;
+                display: flex !important;
+                flex-direction: column;
+            }
+        }
+
         @media (max-width: 576px) {
             .thread-item {
                 padding: 12px;
@@ -486,10 +576,33 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
                 max-width: 85%;
                 padding: 10px 14px;
             }
+            .chat-header {
+                padding: 12px 16px;
+            }
+            .chat-messages {
+                padding: 16px;
+            }
+            .chat-input-area {
+                padding: 12px 16px;
+            }
         }
     </style>
 </head>
 <body>
+
+<nav class="navbar top-nav sticky-top">
+    <div class="container-fluid d-flex align-items-center justify-content-between" style="width:100%;padding:0 16px;">
+        <a href="<?php echo htmlspecialchars($back_link); ?>" class="navbar-brand d-flex align-items-center" style="text-decoration:none;">
+            <img src="images/logo.png" width="28" height="28" alt="logo" class="me-2" style="flex-shrink:0;">
+            <span class="brand-text full-name">Olievenhoutbosch Digital Hub</span>
+            <span class="brand-text short-name">Olievenhoutbosch DH</span>
+        </a>
+        <a href="<?php echo htmlspecialchars($back_link); ?>" class="back-link">
+            <i class="bi bi-arrow-left"></i>
+            <span>Back</span>
+        </a>
+    </div>
+</nav>
 
 <?php if (isset($_SESSION['error_msg'])): ?>
 <div class="alert alert-danger alert-dismissible fade show shadow m-3" role="alert">
@@ -505,26 +618,17 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
 </div>
 <?php endif; ?>
 
-<nav class="navbar top-nav sticky-top">
-    <div class="container-fluid d-flex align-items-center justify-content-between">
-        <a href="<?php echo htmlspecialchars($back_link); ?>" class="back-link">
-            <i class="bi bi-arrow-left me-1"></i> Back
-        </a>
-        <span class="brand-text">Messages</span>
-        <div style="width: 60px;"></div>
-    </div>
-</nav>
-
 <main class="container my-4">
+    <h4 class="fw-bold mb-3" style="color: var(--plum);">Messages</h4>
     <div class="messages-container">
         
         <?php if (in_array($user_type, ['Provider', 'Both'], true)): ?>
         <div class="view-tabs">
             <a href="messages.php?view=sent" class="view-tab <?php echo $view === 'sent' ? 'active' : ''; ?>">
-                <i class="bi bi-send me-1"></i> Sent
+                 Sent
             </a>
             <a href="messages.php?view=received" class="view-tab <?php echo $view === 'received' ? 'active' : ''; ?>">
-                <i class="bi bi-inbox me-1"></i> Received
+                Received
                 <?php if ($unread_count > 0): ?>
                     <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7rem;"><?php echo $unread_count; ?></span>
                 <?php endif; ?>
@@ -555,7 +659,8 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
                         if (strlen($initials) > 2) $initials = substr($initials, 0, 2);
                     ?>
                         <a href="messages.php?view=<?php echo $view; ?>&thread=<?php echo (int)$thread['other_person_id']; ?>&listing=<?php echo (int)$thread['listing_id']; ?>" 
-                           class="thread-item <?php echo $is_active ? 'active' : ''; ?> <?php echo $is_unread ? 'unread' : ''; ?>">
+                           class="thread-item <?php echo $is_active ? 'active' : ''; ?> <?php echo $is_unread ? 'unread' : ''; ?>"
+                           onclick="openMobileChat(event)">
                             <div class="d-flex align-items-center">
                                 <div class="thread-avatar me-3">
                                     <?php echo htmlspecialchars($initials); ?>
@@ -566,7 +671,7 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
                                         <span class="thread-time"><?php echo timeAgo($thread['last_message_time']); ?></span>
                                     </div>
                                     <div class="thread-listing">
-                                        <i class="bi bi-shop me-1"></i><?php echo htmlspecialchars($thread['listing_name']); ?>
+                                        <?php echo htmlspecialchars($thread['listing_name']); ?>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-1">
                                         <span class="thread-preview"><?php echo htmlspecialchars(substr($thread['last_message'], 0, 40)) . (strlen($thread['last_message']) > 40 ? '...' : ''); ?></span>
@@ -582,9 +687,13 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
             </div>
 
             <!-- Chat Area (Right Side) -->
-            <div class="col-lg-8">
+            <div class="col-lg-8 chat-area-mobile" id="chatAreaMobile">
                 <?php if ($active_thread): ?>
                     <div class="chat-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <button type="button" class="mobile-back-btn" onclick="closeMobileChat()" aria-label="Back to conversations">
+                                <i class="bi bi-arrow-left" style="font-size:1.1rem;"></i>
+                            </button>
                         <div>
                             <h6 class="fw-bold mb-0" style="color: var(--plum);">
                                 <?php echo htmlspecialchars($active_thread['other_person_name'] ?? 'Unknown'); ?>
@@ -595,6 +704,7 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
                                     <?php echo htmlspecialchars($active_thread['listing_name'] ?? 'Unknown Listing'); ?>
                                 </a>
                             </small>
+                        </div>
                         </div>
                     </div>
 
@@ -631,10 +741,8 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
                         </form>
                     </div>
                 <?php else: ?>
-                    <div class="empty-state">
-                        <i class="bi bi-chat-square-text"></i>
+                    <div class="empty-state d-none d-lg-flex">
                         <h5>Select a conversation</h5>
-                        <p class="small">Choose a thread to start messaging</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -657,6 +765,39 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
         });
         textarea.focus();
     }
+
+    // Mobile chat view switching
+    function openMobileChat(e) {
+        if (window.innerWidth < 992) {
+            // Let the navigation happen, then show chat
+            // We use a small delay to let the page load, then activate
+            setTimeout(function() {
+                const chatArea = document.getElementById('chatAreaMobile');
+                if (chatArea) chatArea.classList.add('active');
+            }, 50);
+        }
+    }
+
+    function closeMobileChat() {
+        const chatArea = document.getElementById('chatAreaMobile');
+        if (chatArea) chatArea.classList.remove('active');
+        // On mobile, go back to thread list without thread params
+        if (window.innerWidth < 992) {
+            const url = new URL(window.location);
+            url.searchParams.delete('thread');
+            url.searchParams.delete('listing');
+            window.history.replaceState({}, '', url);
+        }
+    }
+
+    // On page load, if there's an active thread on mobile, show chat
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatArea = document.getElementById('chatAreaMobile');
+        const hasThread = <?php echo $active_thread ? 'true' : 'false'; ?>;
+        if (window.innerWidth < 992 && hasThread && chatArea) {
+            chatArea.classList.add('active');
+        }
+    });
 </script>
 <script>
     if ('serviceWorker' in navigator) {

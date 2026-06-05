@@ -25,13 +25,13 @@ if (file_exists('includes/db_connect.php')) {
 // ============================================
 // FETCH STATS FROM DATABASE
 // ============================================
-$totalServices = 0;
+$totalListings = 0;
 $activeUsers = 0;
 $pendingVerifications = 0;
 
 if ($conn) {
     $statsRes = mysqli_query($conn, 'SELECT COUNT(*) as c FROM listing WHERE is_active = 1');
-    if ($statsRes) $totalServices = mysqli_fetch_assoc($statsRes)['c'] ?? 0;
+    if ($statsRes) $totalListings = mysqli_fetch_assoc($statsRes)['c'] ?? 0;
 
     $userRes = mysqli_query($conn, 'SELECT COUNT(*) as c FROM useraccount WHERE is_active = 1');
     if ($userRes) $activeUsers = mysqli_fetch_assoc($userRes)['c'] ?? 0;
@@ -67,9 +67,9 @@ if ($conn) {
 }
 
 // ============================================
-// FETCH TOP RATED SERVICES — CALCULATED FROM comment TABLE
+// FETCH TOP RATED LISTINGS — CALCULATED FROM comment TABLE
 // ============================================
-$topServices = [];
+$topListings = [];
 if ($conn) {
     // Calculate true average from comment table, only services with actual ratings
     $topRes = mysqli_query($conn, "
@@ -87,7 +87,7 @@ if ($conn) {
 
     $rank = 1;
     while ($topRow = mysqli_fetch_assoc($topRes)) {
-        $topServices[] = [
+        $topListings[] = [
             'rank' => $rank++,
             'name' => $topRow['listing_name'],
             'ext' => 'Extension ' . htmlspecialchars($topRow['extension']),
@@ -120,7 +120,15 @@ $ratingAlertCount = 0;
 if ($conn) {
     $flaggedKeywords = ['scam', 'terrible', 'worst', 'never again', 'rip off', 'fraud', 
                         'disappointed', 'horrible', 'awful', 'garbage', 'trash', 
-                        'waste of money', 'broken', 'fake', 'liar', 'stole'];
+                        'waste of money', 'broken', 'fake', 'liar', 'stole', 'scared', 
+                        'sick', 'unprofessional', 'bad', 'not recommend', 'poor', 'awful', 
+                        'dissatisfied', 'unhappy', 'regret', 'untrustworthy', 'rude', 
+                        'unresponsive', 'late', 'no show', 'unhelpful', 'disgusting', 'not worth it',
+                        'avoid', 'do not use', 'never use', 'worst experience', 'scammed', 'horrendous', 
+                        'atrocious', 'not tasty', 'rotten', 'undercooked', 'overcooked', 'dirty', 'filthy', 
+                        'unsanitary', 'lack of hygiene', 'sick from', 'food poisoning', 'vomited', 'diarrhea',
+                        'allergic reaction', 'burned', 'raw', 'spoiled', 'inedible', 'disaster', 'nightmare', 
+                        'terrible service', 'broken', 'damaged', 'poor quality', 'cheap materials'];
 
     $keywordConditions = [];
     foreach ($flaggedKeywords as $kw) {
@@ -147,7 +155,7 @@ if ($conn) {
     if ($ratingRes) $ratingAlertCount = mysqli_fetch_assoc($ratingRes)['c'] ?? 0;
 }
 
-$allGoodCount = max(0, $totalServices - $keywordAlertCount - $ratingAlertCount);
+$allGoodCount = max(0, $totalListings - $keywordAlertCount - $ratingAlertCount);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -160,9 +168,18 @@ $allGoodCount = max(0, $totalServices - $keywordAlertCount - $ratingAlertCount);
     <style>
         :root {
             --plum: #230344;
-            --rose-gold: #f8c9c0;
+            --rose-gold: #c99383;
             --rose-light: #fbe5e6;
             --text-gray: #6c757d;
+        }
+
+        /* Brand name swap: full on desktop, short on mobile */
+        .brand-text.full-name { display: inline !important; }
+        .brand-text.short-name { display: none !important; }
+
+        @media (max-width: 575.98px) {
+            .brand-text.full-name { display: none !important; }
+            .brand-text.short-name { display: inline !important; }
         }
 
         body { 
@@ -210,7 +227,7 @@ $allGoodCount = max(0, $totalServices - $keywordAlertCount - $ratingAlertCount);
         .stat-box.active-box { border-top-color: #28a745; }
 
         .rank-circle {
-            width: 32px; height: 32px; background: var(--rose-light);
+            width: 32px; height: 32px; background: var(--rose-gold);
             color: var(--plum); border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
             font-weight: bold; flex-shrink: 0;
@@ -299,9 +316,10 @@ $allGoodCount = max(0, $totalServices - $keywordAlertCount - $ratingAlertCount);
                 <i class="bi bi-list text-white fs-2"></i>
             </button>
 
-            <a class="navbar-brand d-flex align-items-center ms-2" href="admin_dashboard.php">
+            <a class="navbar-brand d-flex align-items-center" href="admin_dashboard.php">
                 <img src="images/logo.png" width="28" height="28" alt="logo" class="me-2">
-                <span class="brand-text fw-bold text-white">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text fw-bold text-white full-name">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text fw-bold text-white short-name">Olievenhoutbosch DH</span>
             </a>
 
             <div class="collapse navbar-collapse justify-content-center" id="adminNav">
@@ -335,8 +353,8 @@ $allGoodCount = max(0, $totalServices - $keywordAlertCount - $ratingAlertCount);
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-4">
                 <div class="stat-box text-center">
-                    <small class="text-muted">Total Services</small>
-                    <h3 class="fw-bold mb-0"><?php echo number_format($totalServices); ?></h3>
+                    <small class="text-muted">Total Listings</small>
+                    <h3 class="fw-bold mb-0"><?php echo number_format($totalListings); ?></h3>
                 </div>
             </div>
             <div class="col-6 col-md-4">
@@ -353,11 +371,11 @@ $allGoodCount = max(0, $totalServices - $keywordAlertCount - $ratingAlertCount);
             </div>
         </div>
 
-        <!-- Services Overview -->
-        <h6 class="fw-bold mb-3" style="color: black;">Services Overview</h6>
+        <!-- Listings Overview -->
+        <h6 class="fw-bold mb-3" style="color: black;">Listings Overview</h6>
         <div class="row g-3 mb-4">
             <div class="col-md-4">
-                <a href="admin_services.php" class="alert-card keyword">
+                <a href="admin_listings.php" class="alert-card keyword">
                     <div class="alert-icon keyword"><i class="bi bi-exclamation-triangle-fill"></i></div>
                     <div>
                         <div class="alert-count" style="color: #d9534f;"><?php echo $keywordAlertCount; ?></div>
@@ -366,7 +384,7 @@ $allGoodCount = max(0, $totalServices - $keywordAlertCount - $ratingAlertCount);
                 </a>
             </div>
             <div class="col-md-4">
-                <a href="admin_services.php" class="alert-card rating">
+                <a href="admin_listings.php" class="alert-card rating">
                     <div class="alert-icon rating"><i class="bi bi-star-half"></i></div>
                     <div>
                         <div class="alert-count" style="color: #856404;"><?php echo $ratingAlertCount; ?></div>
@@ -375,7 +393,7 @@ $allGoodCount = max(0, $totalServices - $keywordAlertCount - $ratingAlertCount);
                 </a>
             </div>
             <div class="col-md-4">
-                <a href="admin_services.php" class="alert-card good">
+                <a href="admin_listings.php" class="alert-card good">
                     <div class="alert-icon good"><i class="bi bi-check-circle-fill"></i></div>
                     <div>
                         <div class="alert-count" style="color: #28a745;"><?php echo $allGoodCount; ?></div>
@@ -410,21 +428,21 @@ $allGoodCount = max(0, $totalServices - $keywordAlertCount - $ratingAlertCount);
                 </div>
             </div>
 
-            <!-- Top Rated Services — ONLY ACTUALLY RATED -->
+            <!-- Top Rated Listings — ONLY ACTUALLY RATED -->
             <div class="col-lg-4">
                 <div class="card p-4 h-100">
-                    <h6 class="fw-bold mb-4">Top Rated Services</h6>
-                    <?php if (empty($topServices)): ?>
-                        <p class="text-muted small">No rated services yet.</p>
+                    <h6 class="fw-bold mb-4">Top Rated Listings</h6>
+                    <?php if (empty($topListings)): ?>
+                        <p class="text-muted small">No rated listings yet.</p>
                     <?php else: ?>
-                        <?php foreach ($topServices as $svc): ?>
+                        <?php foreach ($topListings as $listing): ?>
                         <div class="d-flex align-items-center mb-3 p-2 rounded-3 border">
-                            <div class="rank-circle me-3"><?php echo $svc['rank']; ?></div>
+                            <div class="rank-circle me-3"><?php echo $listing['rank']; ?></div>
                             <div class="flex-grow-1">
-                                <p class="mb-0 small fw-bold"><?php echo htmlspecialchars($svc['name']); ?></p>
-                                <small class="text-muted"><?php echo $svc['ext']; ?></small>
+                                <p class="mb-0 small fw-bold"><?php echo htmlspecialchars($listing['name']); ?></p>
+                                <small class="text-muted"><?php echo $listing['ext']; ?></small>
                             </div>
-                            <span class="badge bg-light text-dark"><?php echo $svc['rating']; ?> ★</span>
+                            <span class="badge bg-light text-dark"><?php echo $listing['rating']; ?> ★</span>
                         </div>
                         <?php endforeach; ?>
                     <?php endif; ?>

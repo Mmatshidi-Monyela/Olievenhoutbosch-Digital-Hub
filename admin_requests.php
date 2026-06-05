@@ -66,10 +66,20 @@ unset($_SESSION['admin_message']);
     <style>
         :root {
             --plum: #230344;
-            --rose-gold: #f8c9c0;
+            --rose-gold: #c99383;
             --rose-light: #fbe5e6;
             --text-gray: #6c757d;
         }
+
+        /* Brand name swap: full on desktop, short on mobile */
+        .brand-text.full-name { display: inline !important; }
+        .brand-text.short-name { display: none !important; }
+
+        @media (max-width: 575.98px) {
+            .brand-text.full-name { display: none !important; }
+            .brand-text.short-name { display: inline !important; }
+        }
+
         body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
         .navbar.top-nav { background-color: var(--plum); padding: 0.6rem 1rem; border-bottom: 3px solid var(--rose-gold); }
         .brand-text { font-size: clamp(0.8rem, 2.2vw, 1.1rem); white-space: nowrap; }
@@ -217,9 +227,10 @@ unset($_SESSION['admin_message']);
             <button class="navbar-toggler border-0 p-0" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
                 <i class="bi bi-list text-white fs-2"></i>
             </button>
-            <a class="navbar-brand d-flex align-items-center ms-2" href="admin_dashboard.php">
+            <a class="navbar-brand d-flex align-items-center" href="admin_dashboard.php">
                 <img src="images/logo.png" width="28" height="28" alt="logo" class="me-2">
-                <span class="brand-text fw-bold text-white">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text fw-bold text-white full-name">Olievenhoutbosch Digital Hub</span>
+                <span class="brand-text fw-bold text-white short-name">Olievenhoutbosch DH</span>
             </a>
             <div class="collapse navbar-collapse justify-content-center" id="adminNav">
                 <ul class="navbar-nav">
@@ -274,7 +285,7 @@ unset($_SESSION['admin_message']);
                             <thead>
                                 <tr>
                                     <th class="sortable-header" onclick="sortTable(0, 'text')">
-                                        Service <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        Listing <i class="bi bi-arrow-down-up sort-icon"></i>
                                     </th>
                                     <th class="sortable-header" onclick="sortTable(1, 'date')">
                                         Date Submitted <i class="bi bi-arrow-down-up sort-icon"></i>

@@ -8,97 +8,119 @@
     <style>
         :root {
             --plum: #230344;
-            --rose-gold: #f8c9c0;
-            --light-grey: #f4f7f6;
+            --rose-gold: #c99383;
+            --blush: #d8b2a7;
+            --light-grey: #e6e6e6;
         }
         body {
             background-color: var(--light-grey);
-            font-family: 'Inter', sans-serif;
+            font-family: "Segoe UI", sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
         .offline-card {
             background: white;
-            border-radius: 20px;
-            padding: 40px;
+            border-radius: 16px;
+            padding: 40px 30px;
             text-align: center;
             max-width: 400px;
+            width: 100%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
         .offline-icon {
-            font-size: 4rem;
-            color: var(--plum);
+            font-size: 3.5rem;
             margin-bottom: 20px;
         }
         .btn-plum {
-            background-color: var(--plum);
-            color: white;
+            background-color: var(--plum) !important;
+            color: white !important;
             border-radius: 50px;
             padding: 12px 30px;
             border: none;
             font-weight: bold;
+            width: 100%;
+        }
+        .btn-plum:hover {
+            background-color: #3a0d5e !important;
         }
         .cached-pages {
             margin-top: 20px;
             text-align: left;
         }
+        .cached-pages h6 {
+            color: var(--plum);
+        }
         .cached-pages a {
             color: var(--plum);
             text-decoration: none;
             display: block;
-            padding: 8px 0;
+            padding: 10px 0;
             border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+        .cached-pages a:hover {
+            color: var(--rose-gold);
+        }
+        .cached-pages a::before {
+            content: "📄 ";
         }
     </style>
 </head>
 <body>
     <div class="offline-card">
         <div class="offline-icon">📡</div>
-        <h3 class="fw-bold mb-3" style="color: var(--plum);">You're Offline</h3>
+        <h3 class="fw-bold mb-2" style="color: var(--plum);">You're Offline</h3>
         <p class="text-muted mb-4">
-            It looks like your internet connection is down. Don't worry — you can still view pages you visited before.
+            Your internet connection appears to be down. Pages you visited recently are still available below.
         </p>
         
         <div class="cached-pages">
-            <h6 class="fw-bold mb-3">Previously viewed pages:</h6>
+            <h6 class="fw-bold mb-3">Available offline:</h6>
             <div id="cachedList">
                 <p class="text-muted small">Loading cached pages...</p>
             </div>
         </div>
         
-        <button class="btn btn-plum mt-4 w-100" onclick="window.location.reload()">
+        <button class="btn btn-plum mt-4" onclick="window.location.reload()">
             Try Again
         </button>
     </div>
 
     <script>
-        // List cached pages the user can access
+        const CACHE_NAME = 'olieven-hub-v1';
+
         if ('caches' in window) {
-            caches.open('olieven-hub-v1').then((cache) => {
-                cache.keys().then((requests) => {
+            caches.open(CACHE_NAME)
+                .then(cache => cache.keys())
+                .then(requests => {
                     const list = document.getElementById('cachedList');
                     const pages = requests
-                        .filter(req => req.url.includes('.php') && !req.url.includes('offline'))
+                        .filter(req => {
+                            const url = new URL(req.url);
+                            return url.pathname.includes('.php') && !url.pathname.includes('offline');
+                        })
                         .map(req => {
                             const url = new URL(req.url);
-                            return `<a href="${url.pathname}${url.search}">${url.pathname}</a>`;
+                            let name = url.pathname.replace('/', '').replace('.php', '');
+                            name = name === 'index' ? 'Home' : name.charAt(0).toUpperCase() + name.slice(1);
+                            return `<a href="${url.pathname}${url.search}">${name}</a>`;
                         });
                     
-                    if (pages.length > 0) {
-                        list.innerHTML = pages.join('');
-                    } else {
-                        list.innerHTML = '<p class="text-muted small">No pages cached yet. Visit some pages while online first.</p>';
-                    }
+                    list.innerHTML = pages.length > 0 
+                        ? pages.join('') 
+                        : '<p class="text-muted small">No pages cached yet. Visit some pages while online first.</p>';
+                })
+                .catch(() => {
+                    document.getElementById('cachedList').innerHTML = 
+                        '<p class="text-muted small">Unable to load cached pages.</p>';
                 });
-            });
+        } else {
+            document.getElementById('cachedList').innerHTML = 
+                '<p class="text-muted small">Your browser does not support offline caching.</p>';
         }
     </script>
 </body>
 </html>
-
-
-
-
-
