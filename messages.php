@@ -699,7 +699,6 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
                                 <?php echo htmlspecialchars($active_thread['other_person_name'] ?? 'Unknown'); ?>
                             </h6>
                             <small class="text-muted">
-                                <i class="bi bi-shop me-1"></i>
                                 <a href="view_service.php?id=<?php echo (int)$active_thread['listing_id']; ?>" class="text-decoration-none" style="color: var(--copper);">
                                     <?php echo htmlspecialchars($active_thread['listing_name'] ?? 'Unknown Listing'); ?>
                                 </a>
