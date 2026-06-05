@@ -157,7 +157,7 @@ $category_display = implode(' &bull; ', $category_parts);
 // Track view
 $ip = $_SERVER['REMOTE_ADDR'] ?? null;
 $viewer_id = $_SESSION['user_id'] ?? null;
-$view_stmt = mysqli_prepare($conn, "INSERT INTO ListingView (listing_id, viewer_ip, viewer_user_id) VALUES (?, ?, ?)");
+$view_stmt = mysqli_prepare($conn, "INSERT INTO listingview (listing_id, viewer_ip, viewer_user_id) VALUES (?, ?, ?)");
 mysqli_stmt_bind_param($view_stmt, "isi", $listing_id, $ip, $viewer_id);
 mysqli_stmt_execute($view_stmt);
 mysqli_stmt_close($view_stmt);
