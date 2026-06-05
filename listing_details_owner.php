@@ -188,7 +188,7 @@ if (file_exists('includes/db_connect.php')) {
     mysqli_stmt_close($stmt);
 
     // Fetch comments
-    $cmt_stmt = mysqli_prepare($conn, 'SELECT c.*, u.full_name FROM Comment c JOIN useraccount u ON c.user_id = u.user_id WHERE c.listing_id = ? ORDER BY c.created_at DESC');
+    $cmt_stmt = mysqli_prepare($conn, 'SELECT c.*, u.full_name FROM comment c JOIN useraccount u ON c.user_id = u.user_id WHERE c.listing_id = ? ORDER BY c.created_at DESC');
     mysqli_stmt_bind_param($cmt_stmt, 'i', $listing_id);
     mysqli_stmt_execute($cmt_stmt);
     $cmt_result = mysqli_stmt_get_result($cmt_stmt);
