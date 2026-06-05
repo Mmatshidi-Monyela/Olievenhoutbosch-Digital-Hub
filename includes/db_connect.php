@@ -5,10 +5,10 @@
  * @var mysqli $conn $conn Global database connection variable for MySQLi procedural style.
 */
 
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "olieven_dh_db";
+$host = "sql213.infinityfree.com";
+$username = "if0_42090804";
+$password = "QSdbVEVL3NmI";
+$database = "if0_42090804_olieven_dh_db";
 
 $conn = mysqli_connect($host, $username, $password, $database);
 
