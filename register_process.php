@@ -88,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $contact_number = $contact_number_raw;
 
     // Check email exists
-    $stmt = mysqli_prepare($conn, "SELECT email FROM UserAccount WHERE email = ?");
+    $stmt = mysqli_prepare($conn, "SELECT email FROM useraccount WHERE email = ?");
     mysqli_stmt_bind_param($stmt, "s", $email);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_store_result($stmt);
@@ -114,7 +114,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $hashed_security_answer = password_hash(strtolower($security_answer), PASSWORD_DEFAULT);
 
     // Insert with security_question and security_answer
-    $stmt = mysqli_prepare($conn, "INSERT INTO UserAccount 
+    $stmt = mysqli_prepare($conn, "INSERT INTO useraccount 
         (full_name, email, password, extension, user_role, contact_number, security_question, security_answer) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     mysqli_stmt_bind_param($stmt, "ssssssss", 

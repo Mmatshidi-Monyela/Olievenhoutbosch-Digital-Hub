@@ -23,7 +23,7 @@ if (isset($_SERVER['HTTP_REFERER'])) {
     }
 }
 
-$stmt = mysqli_prepare($conn, "SELECT full_name, email, contact_number, extension, user_role FROM UserAccount WHERE user_id = ?");
+$stmt = mysqli_prepare($conn, "SELECT full_name, email, contact_number, extension, user_role FROM useraccount WHERE user_id = ?");
 mysqli_stmt_bind_param($stmt, "i", $user_id);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);

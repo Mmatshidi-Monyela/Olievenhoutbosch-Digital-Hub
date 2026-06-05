@@ -21,7 +21,7 @@ $back_link = $_SESSION['forgot_back'] ?? 'login.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && !isset($_POST['security_answer'])) {
     $email = trim($_POST['email']);
 
-    $stmt = mysqli_prepare($conn, "SELECT user_id, full_name, security_question FROM UserAccount WHERE email = ?");
+    $stmt = mysqli_prepare($conn, "SELECT user_id, full_name, security_question FROM useraccount WHERE email = ?");
     mysqli_stmt_bind_param($stmt, "s", $email);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['security_answer'])) {
     $answer = trim($_POST['security_answer']);
     $user_id = $_SESSION['reset_user_id'] ?? 0;
 
-    $stmt = mysqli_prepare($conn, "SELECT security_answer FROM UserAccount WHERE user_id = ?");
+    $stmt = mysqli_prepare($conn, "SELECT security_answer FROM useraccount WHERE user_id = ?");
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_password']) && is
         $step = 3;
     } else {
         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-        $stmt = mysqli_prepare($conn, "UPDATE UserAccount SET password = ? WHERE user_id = ?");
+        $stmt = mysqli_prepare($conn, "UPDATE useraccount SET password = ? WHERE user_id = ?");
         mysqli_stmt_bind_param($stmt, "si", $hashed_password, $user_id);
 
         if (mysqli_stmt_execute($stmt)) {

@@ -38,7 +38,7 @@ if ($conn) {
                 u.full_name as owner,
                 l.verification_status
               FROM listing l
-              JOIN UserAccount u ON l.user_id = u.user_id
+              JOIN useraccount u ON l.user_id = u.user_id
               WHERE l.verification_status = 'Pending'
               ORDER BY l.created_at DESC";
 

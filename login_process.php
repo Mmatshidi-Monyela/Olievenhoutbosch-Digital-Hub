@@ -35,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    $stmt = mysqli_prepare($conn, "SELECT user_id, full_name, user_role, password, is_active FROM UserAccount WHERE email = ?");
+    $stmt = mysqli_prepare($conn, "SELECT user_id, full_name, user_role, password, is_active FROM useraccount WHERE email = ?");
     mysqli_stmt_bind_param($stmt, "s", $email);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);

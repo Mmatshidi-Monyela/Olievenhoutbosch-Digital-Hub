@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmt = mysqli_prepare($conn, "
     SELECT l.*, u.full_name as owner_name, u.user_id as owner_id, u.created_at as member_since
     FROM listing l 
-    JOIN UserAccount u ON l.user_id = u.user_id 
+    JOIN useraccount u ON l.user_id = u.user_id 
     WHERE l.listing_id = ?
 ");
 mysqli_stmt_bind_param($stmt, 'i', $listing_id);
@@ -101,7 +101,7 @@ $flaggedKeywords = ['scam', 'terrible', 'worst', 'never again', 'rip off', 'frau
 
 $keyword_alert_count = 0;
 
-$cmt_stmt = mysqli_prepare($conn, "SELECT c.*, u.full_name FROM Comment c JOIN UserAccount u ON c.user_id = u.user_id WHERE c.listing_id = ? ORDER BY c.created_at DESC");
+$cmt_stmt = mysqli_prepare($conn, "SELECT c.*, u.full_name FROM comment c JOIN useraccount u ON c.user_id = u.user_id WHERE c.listing_id = ? ORDER BY c.created_at DESC");
 mysqli_stmt_bind_param($cmt_stmt, 'i', $listing_id);
 mysqli_stmt_execute($cmt_stmt);
 $cmt_result = mysqli_stmt_get_result($cmt_stmt);

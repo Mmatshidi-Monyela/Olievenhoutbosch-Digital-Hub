@@ -34,7 +34,7 @@ if ($listing_id == 0) {
 // Fetch listing from database
 $stmt = mysqli_prepare($conn, "SELECT l.*, u.full_name as owner_name, u.user_id as owner_id, u.created_at as member_since
     FROM listing l 
-    JOIN UserAccount u ON l.user_id = u.user_id 
+    JOIN useraccount u ON l.user_id = u.user_id 
     WHERE l.listing_id = ? AND l.is_active = 1");
 mysqli_stmt_bind_param($stmt, "i", $listing_id);
 mysqli_stmt_execute($stmt);
@@ -75,7 +75,7 @@ $main_image = $gallery_images[0]['image_path'] ?? $service['image_path'] ?? 'upl
 // Fetch comments with user info
 $comments_stmt = mysqli_prepare($conn, "SELECT c.*, u.full_name, u.user_id 
     FROM comment c 
-    JOIN UserAccount u ON c.user_id = u.user_id 
+    JOIN useraccount u ON c.user_id = u.user_id 
     WHERE c.listing_id = ? 
     ORDER BY c.created_at DESC");
 mysqli_stmt_bind_param($comments_stmt, "i", $listing_id);

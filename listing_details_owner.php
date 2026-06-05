@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_verification'
             COALESCE(AVG(c.rating), 0) as avg_rating,
             COUNT(c.comment_id) as review_count
         FROM listing l
-        LEFT JOIN Comment c ON l.listing_id = c.listing_id
+        LEFT JOIN comment c ON l.listing_id = c.listing_id
         WHERE l.listing_id = ? AND l.user_id = ?
         GROUP BY l.listing_id, l.verification_status
     ");
@@ -188,7 +188,7 @@ if (file_exists('includes/db_connect.php')) {
     mysqli_stmt_close($stmt);
 
     // Fetch comments
-    $cmt_stmt = mysqli_prepare($conn, 'SELECT c.*, u.full_name FROM Comment c JOIN UserAccount u ON c.user_id = u.user_id WHERE c.listing_id = ? ORDER BY c.created_at DESC');
+    $cmt_stmt = mysqli_prepare($conn, 'SELECT c.*, u.full_name FROM Comment c JOIN useraccount u ON c.user_id = u.user_id WHERE c.listing_id = ? ORDER BY c.created_at DESC');
     mysqli_stmt_bind_param($cmt_stmt, 'i', $listing_id);
     mysqli_stmt_execute($cmt_stmt);
     $cmt_result = mysqli_stmt_get_result($cmt_stmt);
