@@ -107,19 +107,41 @@ if ($phone_row = mysqli_fetch_assoc($phone_result)) {
 mysqli_stmt_close($provider_phone_stmt);
 
 $digits_only = preg_replace('/[^0-9]/', '', $contact_number);
+
+// Normalize to +27 format for the dial link
+if (strpos($digits_only, '27') === 0) {
+    // Already has country code
+    $phone_link_number = $digits_only;
+} elseif (strpos($digits_only, '0') === 0) {
+    // Starts with 0 (local format) — replace 0 with 27
+    $phone_link_number = '27' . substr($digits_only, 1);
+} else {
+    // No prefix at all — add 27
+    $phone_link_number = '27' . $digits_only;
+}
+
+$phone_link = 'tel:+' . $phone_link_number;
+
+// Display formatting
 $phone_display = '';
 if (strlen($digits_only) >= 10) {
     if (strpos($digits_only, '27') === 0) {
+        // +27 XX XXX XXXX
         $phone_display = '+27 ' . substr($digits_only, 2, 2) . ' ' . 
                         substr($digits_only, 4, 3) . ' ' . 
                         substr($digits_only, 7);
-    } else {
+    } elseif (strpos($digits_only, '0') === 0) {
+        // 0XX XXX XXXX (local display format)
         $phone_display = '0' . substr($digits_only, 0, 2) . ' ' . 
                         substr($digits_only, 2, 3) . ' ' . 
                         substr($digits_only, 5);
+    } else {
+        // No prefix — show as +27 for clarity
+        $phone_display = '+27 ' . substr($phone_link_number, 2, 2) . ' ' . 
+                        substr($phone_link_number, 4, 3) . ' ' . 
+                        substr($phone_link_number, 7);
     }
 }
-$phone_link = 'tel:' . $digits_only;
 
 // Payment options
 $payment_options = [];

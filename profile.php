@@ -52,6 +52,7 @@ $role_labels = [
 ];
 $role_display = $role_labels[$user['user_role']] ?? 'Unknown Role';
 
+// Format contact number for display (remove +27 prefix)
 $contact_display = '';
 if (!empty($user['contact_number'])) {
     $digits = preg_replace('/[^0-9]/', '', $user['contact_number']);
@@ -205,6 +206,20 @@ if (!empty($user['contact_number'])) {
             .back-text { display: none; }
             .back-icon-only { display: inline; }
         }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            font-size: 0.9rem;
+        }
+        .alert-success {
+            background: #f0f7f0;
+            color: #2d5a2d;
+        }
+        .alert-danger {
+            background: #fdf2f2;
+            color: #8b3a3a;
+        }
     </style>
 </head>
 <body>
@@ -260,6 +275,35 @@ if (!empty($user['contact_number'])) {
                 <div class="card glass-card p-4 p-md-5">
                     <div class="tab-content">
                         
+                        <!-- Alert Messages -->
+                        <?php if (isset($_SESSION['profile_success'])): ?>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i><?php echo htmlspecialchars($_SESSION['profile_success']); unset($_SESSION['profile_success']); ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (isset($_SESSION['profile_error'])): ?>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i><?php echo htmlspecialchars($_SESSION['profile_error']); unset($_SESSION['profile_error']); ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (isset($_SESSION['password_success'])): ?>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i><?php echo htmlspecialchars($_SESSION['password_success']); unset($_SESSION['password_success']); ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (isset($_SESSION['password_error'])): ?>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i><?php echo htmlspecialchars($_SESSION['password_error']); unset($_SESSION['password_error']); ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endif; ?>
+
                         <!-- Personal Details Tab -->
                         <div class="tab-pane fade show active" id="personal-info" role="tabpanel">
                             <div class="d-flex justify-content-between align-items-center mb-4">
