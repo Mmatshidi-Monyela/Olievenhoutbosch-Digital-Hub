@@ -19,66 +19,6 @@ if ($listing_id <= 0 || !$conn) {
 }
 
 // ============================================
-// HANDLE APPROVE / REJECT ACTIONS
-// ============================================
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['admin_action'] ?? '';
-
-    if ($action === 'approve') {
-        $stmt = mysqli_prepare($conn, "UPDATE listing SET verification_status = 'Verified' WHERE listing_id = ?");
-        mysqli_stmt_bind_param($stmt, 'i', $listing_id);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_close($stmt);
-
-        // Notify provider
-        $owner_id = $listing['owner_id'] ?? null;
-        $listing_name = $listing['listing_name'] ?? 'Your listing';
-        if ($owner_id) {
-            $title = "Verification Approved";
-            $message = "Your listing '" . $listing_name . "' has been verified! Customers will now see the verified badge.";
-            $link = "listing_details_owner.php?id=" . $listing_id;
-            $notif_stmt = mysqli_prepare($conn, "INSERT INTO notification (user_id, title, message, type, link) VALUES (?, ?, ?, 'success', ?)");
-            mysqli_stmt_bind_param($notif_stmt, "isss", $owner_id, $title, $message, $link);
-            mysqli_stmt_execute($notif_stmt);
-            mysqli_stmt_close($notif_stmt);
-        }
-
-        $_SESSION['admin_msg'] = 'Listing verified successfully.';
-        header("Location: admin_requests.php");
-        exit();
-    }
-
-    if ($action === 'reject') {
-        $reason = $_POST['rejection_reason'] ?? '';
-        $stmt = mysqli_prepare($conn, "UPDATE listing SET verification_status = 'Unverified' WHERE listing_id = ?");
-        mysqli_stmt_bind_param($stmt, 'i', $listing_id);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_close($stmt);
-
-        // Notify provider
-        $owner_id = $listing['owner_id'] ?? null;
-        $listing_name = $listing['listing_name'] ?? 'Your listing';
-        if ($owner_id) {
-            $title = "Verification Rejected";
-            $message = "Your verification request for '" . $listing_name . "' was rejected.";
-            if (!empty($reason)) {
-                $message .= " Reason: " . $reason;
-            }
-            $message .= " Please review your listing details and try again.";
-            $link = "listing_details_owner.php?id=" . $listing_id;
-            $notif_stmt = mysqli_prepare($conn, "INSERT INTO notification (user_id, title, message, type, link) VALUES (?, ?, ?, 'danger', ?)");
-            mysqli_stmt_bind_param($notif_stmt, "isss", $owner_id, $title, $message, $link);
-            mysqli_stmt_execute($notif_stmt);
-            mysqli_stmt_close($notif_stmt);
-        }
-
-        $_SESSION['admin_msg'] = 'Verification request rejected.' . (!empty($reason) ? ' Reason: ' . $reason : '');
-        header("Location: admin_requests.php");
-        exit();
-    }
-}
-
-// ============================================
 // FETCH LISTING DATA
 // ============================================
 $stmt = mysqli_prepare($conn, "
@@ -210,6 +150,66 @@ function getDeliveryLabel($mode) {
 $admin_name = $_SESSION['full_name'] ?? 'Administrator';
 $admin_first_name = explode(' ', $admin_name)[0];
 ?>
+// HANDLE APPROVE / REJECT ACTIONS
+// ============================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['admin_action'] ?? '';
+
+    if ($action === 'approve') {
+        $stmt = mysqli_prepare($conn, "UPDATE listing SET verification_status = 'Verified' WHERE listing_id = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $listing_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+
+        // Notify provider
+        $owner_id = $listing['owner_id'] ?? null;
+        $listing_name = $listing['listing_name'] ?? 'Your listing';
+        if ($owner_id) {
+            $title = "Verification Approved";
+            $message = "Your listing '" . $listing_name . "' has been verified! Customers will now see the verified badge.";
+            $link = "listing_details_owner.php?id=" . $listing_id;
+            $notif_stmt = mysqli_prepare($conn, "INSERT INTO notification (user_id, title, message, type, link) VALUES (?, ?, ?, 'success', ?)");
+            mysqli_stmt_bind_param($notif_stmt, "isss", $owner_id, $title, $message, $link);
+            mysqli_stmt_execute($notif_stmt);
+            mysqli_stmt_close($notif_stmt);
+        }
+
+        $_SESSION['admin_msg'] = 'Listing verified successfully.';
+        header("Location: admin_requests.php");
+        exit();
+    }
+
+    if ($action === 'reject') {
+        $reason = $_POST['rejection_reason'] ?? '';
+        $stmt = mysqli_prepare($conn, "UPDATE listing SET verification_status = 'Unverified' WHERE listing_id = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $listing_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+
+        // Notify provider
+        $owner_id = $listing['owner_id'] ?? null;
+        $listing_name = $listing['listing_name'] ?? 'Your listing';
+        if ($owner_id) {
+            $title = "Verification Rejected";
+            $message = "Your verification request for '" . $listing_name . "' was rejected.";
+            if (!empty($reason)) {
+                $message .= " Reason: " . $reason;
+            }
+            $message .= " Please review your listing details and try again.";
+            $link = "listing_details_owner.php?id=" . $listing_id;
+            $notif_stmt = mysqli_prepare($conn, "INSERT INTO notification (user_id, title, message, type, link) VALUES (?, ?, ?, 'danger', ?)");
+            mysqli_stmt_bind_param($notif_stmt, "isss", $owner_id, $title, $message, $link);
+            mysqli_stmt_execute($notif_stmt);
+            mysqli_stmt_close($notif_stmt);
+        }
+
+        $_SESSION['admin_msg'] = 'Verification request rejected.' . (!empty($reason) ? ' Reason: ' . $reason : '');
+        header("Location: admin_requests.php");
+        exit();
+    }
+}
+
+// ============================================
 <!DOCTYPE html>
 <html lang="en">
 <head>

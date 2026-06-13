@@ -956,7 +956,7 @@ function getDeliveryLabel($mode) {
             <span class="brand-text d-sm-none">Olievenhoutbosch DH</span>
             <span class="brand-text d-none d-sm-inline">Olievenhoutbosch Digital Hub</span>
         </a>
-        
+
         <!-- RIGHT: Back button -->
         <a href="listing_dashboard.php" class="back-link">
             <i class="bi bi-arrow-left"></i>
@@ -1285,6 +1285,30 @@ function getDeliveryLabel($mode) {
             <i class="bi bi-shield-check"></i> EFT details shared via messaging for privacy
         </div>
         <?php endif; ?>
+    </div>
+
+    <!-- Performance Bubble Card (Mobile) -->
+    <div class="mobile-bubble-card">
+        <div class="section-label">Performance</div>
+        <div class="row g-2">
+            <div class="col-6">
+                <div style="background:#fdfaf9;border:1px solid var(--rose-gold);border-radius:10px;padding:15px;text-align:center;">
+                    <div style="font-size:1.5rem;font-weight:bold;color:var(--plum);"><?php echo $listing['page_views']; ?></div>
+                    <div class="small text-muted">Page Views</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div style="background:#fdfaf9;border:1px solid var(--rose-gold);border-radius:10px;padding:15px;text-align:center;">
+                    <div style="font-size:1.5rem;font-weight:bold;color:var(--plum);">&#9733; <?php echo $avg_rating; ?></div>
+                    <div class="small text-muted">Avg. Rating</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Tip (Mobile) -->
+    <div class="mobile-bubble-card" style="background:#e3f2fd;border:none;color:#0d47a1;">
+        <strong>Verification Tip:</strong> 4+ star ratings, consistent views, and positive feedback improve chances of getting verified!
     </div>
 
     <!-- Comments / Feedback (Read-only for owner) -->

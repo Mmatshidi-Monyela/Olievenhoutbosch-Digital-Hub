@@ -12,14 +12,14 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 // Back link: ALWAYS go to the user's dashboard based on role
-// Never use HTTP_REFERER (prevents back-loop to forgot_password, etc.)
 $role = $_SESSION['user_role'] ?? 'Customer';
 $back_link = match($role) {
     'Admin'     => 'admin_dashboard.php',
     'Provider'  => 'listing_dashboard.php',
-    'Both'      => 'listing_dashboard.php', // Both users manage listings from dashboard
+    'Both'      => $_SESSION['last_dashboard'] ?? 'listing_dashboard.php', // Remember which dashboard they were on
     default     => 'main.php', // Customer
 };
+
 
 $stmt = mysqli_prepare($conn, "SELECT full_name, email, contact_number, extension, user_role FROM useraccount WHERE user_id = ?");
 mysqli_stmt_bind_param($stmt, "i", $user_id);

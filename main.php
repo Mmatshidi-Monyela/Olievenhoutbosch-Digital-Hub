@@ -1,14 +1,22 @@
 <?php
 session_start();
+$_SESSION['last_dashboard'] = 'main.php';
+
+// Access control: only Customer and Both allowed
+$role = $_SESSION['user_role'] ?? '';
+if (!isset($_SESSION['user_id']) || !in_array($role, ['Customer', 'Both'])) {
+    header("Location: login.php");
+    exit();
+}
+
 include 'includes/db_connect.php';
 /** @var mysqli $conn */
-
 // Get user data for header
 $display_name = $_SESSION['full_name'] ?? 'Guest';
 $first_name = explode(' ', $display_name)[0];
 $user_role = $_SESSION['user_role'] ?? 'Customer';
 $user_role_display = match($user_role) {
-    'Provider' => 'Service Provider',
+    'Provider' => 'Provider',
     'Admin' => 'Administrator',
     'Both' => 'Customer & Provider',
     default => 'Customer',

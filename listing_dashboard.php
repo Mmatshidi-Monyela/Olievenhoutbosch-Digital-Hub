@@ -1,5 +1,6 @@
 <?php
 session_start();
+$_SESSION['last_dashboard'] = 'listing_dashboard.php';
 
 if (file_exists('includes/db_connect.php')) {
     include 'includes/db_connect.php';
