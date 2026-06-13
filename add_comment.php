@@ -177,7 +177,7 @@ if (empty($errors) && $conn) {
             if ($success) {
                 $_SESSION['success_msg'] = 'Your review has been posted.';
 
-                // ===== NOTIFY LISTING OWNER =====
+                //      NOTIFY LISTING OWNER =====
                 if ($listing_info && $listing_info['owner_id'] != $user_id) {
                     $notif_title = "New Review on Your Listing";
                     $notif_message = "Your listing \"" . $listing_info['listing_name'] . "\" received a new " . $rating . "-star review.";

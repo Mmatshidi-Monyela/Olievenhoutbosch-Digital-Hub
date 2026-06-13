@@ -8,14 +8,15 @@ $success = '';
 $step = 1; // Step 1: Enter email, Step 2: Answer question, Step 3: Reset password
 $user_data = null;
 
-// Track where the user came from so we can send them back there
-if (!isset($_SESSION['forgot_back']) && isset($_SERVER['HTTP_REFERER'])) {
-    $from = $_SERVER['HTTP_REFERER'];
-    if (strpos($from, $_SERVER['HTTP_HOST']) !== false) {
-        $_SESSION['forgot_back'] = $from;
-    }
+// Determine back link based on login state
+$is_logged_in = isset($_SESSION['user_id']);
+if ($is_logged_in) {
+    // Logged-in users go back to profile
+    $back_link = 'profile.php';
+} else {
+    // Not logged in: go back to login
+    $back_link = 'login.php';
 }
-$back_link = $_SESSION['forgot_back'] ?? 'login.php';
 
 // Handle Step 1: Verify email exists
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && !isset($_POST['security_answer'])) {
@@ -76,8 +77,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_password']) && is
 
         if (mysqli_stmt_execute($stmt)) {
             $success = 'Password reset successfully! You can now login.';
-            session_unset();
-            session_destroy();
+            // Clear reset session data but keep login state if they were logged in
+            unset($_SESSION['reset_user_id']);
+            unset($_SESSION['reset_email']);
             $step = 4; // Done
         } else {
             $error = 'Something went wrong. Please try again.';
@@ -220,15 +222,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_password']) && is
                 <!-- Step 4: Success -->
                 <?php if ($step == 4): ?>
                     <div class="text-center">
-                        <a href="<?php echo htmlspecialchars($back_link); ?>" class="btn btn-rose w-100 py-2">Continue</a>
+                        <a href="login.php" class="btn btn-rose w-100 py-2">Go to Login</a>
                     </div>
                 <?php endif; ?>
 
+                <!-- Back link: only show if not on success step -->
+                <?php if ($step != 4): ?>
                 <div class="text-center mt-3">
                     <a href="<?php echo htmlspecialchars($back_link); ?>" class="back-link">
                         <i class="bi bi-arrow-left me-1"></i>Back
                     </a>
                 </div>
+                <?php endif; ?>
 
             </div>
         </div>

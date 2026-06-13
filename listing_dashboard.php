@@ -111,7 +111,7 @@ if (isset($_SESSION['provider_notification'])) {
             margin-top: 20px; 
         }
 
-        /* ===== SIMPLIFIED LISTING CARD ===== */
+        /*      SIMPLIFIED LISTING CARD      */
         .listing-card {
             background: white;
             border-radius: 16px;
@@ -245,7 +245,7 @@ if (isset($_SESSION['provider_notification'])) {
 <body>
 
     <nav class="navbar top-nav sticky-top">
-        <div class="container-fluid d-flex justify-content-between align-items-center" style="max-width:1400px;margin:0 auto;width:100%;">
+        <div class="container-fluid d-flex justify-content-between align-items-center" style="width:100%;padding:0 16px;">
             <a class="navbar-brand d-flex align-items-center" href="index.php" style="text-decoration:none;">
                 <img src="images/logo.png" width="28" height="28" alt="logo" class="me-2" style="flex-shrink:0;">
                 <span class="brand-text">Olievenhoutbosch Digital Hub</span>
@@ -254,10 +254,10 @@ if (isset($_SESSION['provider_notification'])) {
 
             <div class="d-flex align-items-center gap-2">
                 <div class="dropdown">
-                    <div class="d-flex align-items-center" role="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="d-flex align-items-center" role="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
                         <div class="text-end me-2 d-none d-md-block text-white">
                             <p class="mb-0 fw-bold" style="font-size: 0.8rem;"><?php echo htmlspecialchars($first_name); ?></p>
-                            <p class="mb-0 opacity-75" style="font-size: 0.65rem;"><?php echo $role === 'Both' ? 'Customer & Provider' : 'Service Provider'; ?></p>
+                            <p class="mb-0 opacity-75" style="font-size: 0.65rem;"><?php echo $role === 'Both' ? 'Customer & Provider' : 'Provider'; ?></p>
                         </div>
                         <div class="profile-avatar"><?php echo $avatar_letter; ?></div>
                     </div>

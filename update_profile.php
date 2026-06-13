@@ -83,6 +83,8 @@ if ($contact_number === null) {
 }
 
 if (mysqli_stmt_execute($update_stmt)) {
+    // UPDATE SESSION so the navbar shows the new name immediately
+    $_SESSION['full_name'] = $full_name;
     $_SESSION['profile_success'] = "Your profile has been updated successfully.";
 } else {
     $_SESSION['profile_error'] = "Something went wrong. Please try again.";

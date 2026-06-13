@@ -143,13 +143,16 @@ $icons = ['success' => 'check-circle', 'danger' => 'exclamation-triangle', 'info
 <body>
 
 <nav class="navbar navbar-custom sticky-top">
-    <div class="container-fluid d-flex justify-content-between align-items-center" style="max-width:1400px;margin:0 auto;width:100%;">
+    <div class="container-fluid d-flex align-items-center justify-content-between" style="width:100%;padding:0 16px;">
         <a class="navbar-brand d-flex align-items-center" href="listing_dashboard.php" style="text-decoration:none;">
-            <img src="images/logo.png" width="28" height="28" class="me-2" style="flex-shrink:0;">
+            <img src="images/logo.png" width="28" height="28" alt="logo" class="me-2" style="flex-shrink:0;">
             <span class="brand-text brand-text-mobile">Olievenhoutbosch DH</span>
             <span class="brand-text brand-text-desktop">Olievenhoutbosch Digital Hub</span>
         </a>
-        <a href="listing_dashboard.php" class="back-link"><i class="bi bi-arrow-left me-1"></i><span class="back-text">Back</span></a>
+        <a href="listing_dashboard.php" class="back-link">
+            <i class="bi bi-arrow-left"></i>
+            <span class="back-text">Back</span>
+        </a>
     </div>
 </nav>
 

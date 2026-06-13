@@ -124,14 +124,14 @@ mysqli_stmt_close($cnt_stmt);
 
 $remaining = $max_total - $existing_count;
 
-if (!empty($_FILES['new_photos']) && is_array($_FILES['new_photos']['name']) && $remaining > 0) {
-    for ($i = 0; $i < count($_FILES['new_photos']['name']) && count($uploaded) < $remaining; $i++) {
-        if (empty($_FILES['new_photos']['tmp_name'][$i])) continue;
+if (!empty($_FILES['work_photos']) && is_array($_FILES['work_photos']['name']) && $remaining > 0) {
+    for ($i = 0; $i < count($_FILES['work_photos']['name']) && count($uploaded) < $remaining; $i++) {
+        if (empty($_FILES['work_photos']['tmp_name'][$i])) continue;
 
-        $tmp  = $_FILES['new_photos']['tmp_name'][$i];
-        $name = $_FILES['new_photos']['name'][$i];
-        $size = $_FILES['new_photos']['size'][$i];
-        $type = $_FILES['new_photos']['type'][$i];
+        $tmp  = $_FILES['work_photos']['tmp_name'][$i];
+        $name = $_FILES['work_photos']['name'][$i];
+        $size = $_FILES['work_photos']['size'][$i];
+        $type = $_FILES['work_photos']['type'][$i];
 
         if ($size > $max_size) continue;
         if (!in_array($type, $allowed_types)) continue;

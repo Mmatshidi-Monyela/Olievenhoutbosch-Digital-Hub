@@ -11,17 +11,15 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-$back_link = 'index.php';
-if (isset($_SERVER['HTTP_REFERER'])) {
-    $from = $_SERVER['HTTP_REFERER'];
-    $host = $_SERVER['HTTP_HOST'];
-    
-    if (strpos($from, $host) !== false 
-        && !str_contains($from, 'login.php') 
-        && !str_contains($from, 'profile.php')) {
-        $back_link = $from;
-    }
-}
+// Back link: ALWAYS go to the user's dashboard based on role
+// Never use HTTP_REFERER (prevents back-loop to forgot_password, etc.)
+$role = $_SESSION['user_role'] ?? 'Customer';
+$back_link = match($role) {
+    'Admin'     => 'admin_dashboard.php',
+    'Provider'  => 'listing_dashboard.php',
+    'Both'      => 'listing_dashboard.php', // Both users manage listings from dashboard
+    default     => 'main.php', // Customer
+};
 
 $stmt = mysqli_prepare($conn, "SELECT full_name, email, contact_number, extension, user_role FROM useraccount WHERE user_id = ?");
 mysqli_stmt_bind_param($stmt, "i", $user_id);
@@ -45,7 +43,7 @@ $user = [
 ];
 
 $role_labels = [
-    'Provider'  => 'Service Provider',
+    'Provider'  => 'Provider',
     'Admin'     => 'System Administrator',
     'Customer'  => 'Customer',
     'Both'      => 'Customer & Provider'
@@ -74,7 +72,7 @@ if (!empty($user['contact_number'])) {
     <link rel="apple-touch-icon" href="images/logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
+
     <style>
         :root {
             --plum: #230344;
@@ -243,7 +241,7 @@ if (!empty($user['contact_number'])) {
 
     <div class="container profile-container mb-5">
         <div class="row g-4">
-            
+
             <!-- Left Sidebar -->
             <div class="col-lg-4">
                 <div class="card glass-card text-center p-4">
@@ -252,12 +250,12 @@ if (!empty($user['contact_number'])) {
                             <?php echo $user['avatar_letter']; ?>
                         </div>
                     </div>
-                    
+
                     <h3 class="fw-bold mb-0"><?php echo htmlspecialchars($user['full_name']); ?></h3>
                     <p class="text-muted small mb-3"><?php echo htmlspecialchars($role_display); ?></p>
 
                     <hr class="my-4 opacity-50">
-                    
+
                     <div class="nav flex-column sidebar-nav" id="profileTabs" role="tablist">
                         <a class="nav-link active" data-bs-toggle="pill" href="#personal-info" role="tab">
                             <i class="bi bi-person-vcard me-2"></i> Personal Details
@@ -276,7 +274,7 @@ if (!empty($user['contact_number'])) {
             <div class="col-lg-8">
                 <div class="card glass-card p-4 p-md-5">
                     <div class="tab-content">
-                        
+
                         <!-- Alert Messages -->
                         <?php if (isset($_SESSION['profile_success'])): ?>
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -364,7 +362,7 @@ if (!empty($user['contact_number'])) {
                         <!-- Password Tab -->
                         <div class="tab-pane fade" id="password-settings" role="tabpanel">
                             <h4 class="fw-bold mb-4">Change Password</h4>
-                            
+
                             <form action="update_password.php" method="POST">
                                 <div class="row g-3">
                                     <div class="col-12">

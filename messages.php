@@ -504,7 +504,7 @@ if (isset($_GET['thread']) && isset($_GET['listing'])) {
             }
         }
 
-        /* ===== MOBILE CHAT VIEW ===== */
+        /*      MOBILE CHAT VIEW      */
         @media (max-width: 991px) {
             .messages-container {
                 position: relative;

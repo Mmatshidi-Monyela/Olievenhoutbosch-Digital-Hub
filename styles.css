@@ -246,9 +246,7 @@ body {
   transform: translateY(-2px);
 }
 
-/* ============================================
-   MINIMAL LANDING PAGE ENHANCEMENTS
-   ============================================ */
+/* LANDING PAGE  */
 
 /* --- How It Works --- */
 .how-it-works {
@@ -402,9 +400,6 @@ body {
 .step-card:nth-child(3) {
   animation-delay: 0.3s;
 }
-/* ============================================
-   RESPONSIVE NAVBAR TEXT SWAP (safe additive)
-   ============================================ */
 
 /* Mobile: show short name, hide full name */
 @media (max-width: 575.98px) {
@@ -426,10 +421,6 @@ body {
   }
 }
 
-/* ============================================
-   NAVBAR BRAND SHRINK FIX (safe additive)
-   ============================================ */
-
 /* Only apply to top-nav pages (index, main, etc) */
 .top-nav .navbar-brand {
   min-width: 0;
@@ -444,10 +435,6 @@ body {
   text-overflow: ellipsis;
   min-width: 0;
 }
-
-/* ============================================
-   REGISTER/LOGIN CARD MOBILE FIX (safe additive)
-   ============================================ */
 
 /* Auth pages use container-fluid for full width on mobile */
 @media (max-width: 575.98px) {

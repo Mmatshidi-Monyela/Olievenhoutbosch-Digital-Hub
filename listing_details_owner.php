@@ -331,7 +331,7 @@ function getDeliveryLabel($mode) {
             margin: 0;
         }
 
-        /* ===== NAVBAR ===== */
+        /*      NAVBAR      */
         .navbar-custom {
             background-color: var(--plum);
             height: 56px;
@@ -391,7 +391,7 @@ function getDeliveryLabel($mode) {
             }
         }
 
-        /* ===== PHOTO GALLERY ===== */
+        /*      PHOTO GALLERY      */
         .photo-hero {
             position: relative;
             width: 100%;
@@ -466,7 +466,7 @@ function getDeliveryLabel($mode) {
             display: block;
         }
 
-        /* ===== INFO CARD ===== */
+        /*      INFO CARD      */
         .info-card {
             background: white;
             padding: 20px 16px;
@@ -505,7 +505,7 @@ function getDeliveryLabel($mode) {
         .status-pending { background-color: #fff3cd; color: #856404; }
         .status-verified { background-color: #d4edda; color: #155724; }
 
-        /* ===== TAG PILLS ===== */
+        /*      TAG PILLS      */
         .tag-pill {
             background: #fdfaf9;
             color: var(--copper);
@@ -545,7 +545,7 @@ function getDeliveryLabel($mode) {
             border-color: #bbdefb;
         }
 
-        /* ===== DESCRIPTION ===== */
+        /*      DESCRIPTION      */
         .desc-section {
             background: white;
             margin: 8px 0;
@@ -558,7 +558,7 @@ function getDeliveryLabel($mode) {
             word-break: break-word;
         }
 
-        /* ===== COMMENTS SECTION ===== */
+        /*      COMMENTS SECTION      */
         .comments-section {
             background: white;
             margin: 8px 0;
@@ -670,7 +670,7 @@ function getDeliveryLabel($mode) {
             margin-bottom: 20px;
         }
 
-        /* ===== MOBILE BUBBLE CARDS ===== */
+        /*      MOBILE BUBBLE CARDS      */
         .mobile-bubble-card {
             background: white;
             border-radius: 16px;
@@ -701,7 +701,7 @@ function getDeliveryLabel($mode) {
             margin-bottom: 8px;
         }
 
-        /* ===== SIDEBAR ACTION BUTTONS (DESKTOP) ===== */
+        /*      SIDEBAR ACTION BUTTONS (DESKTOP)      */
         .sidebar-action-card {
             background: white ;
             border-radius: 16px;
@@ -757,7 +757,7 @@ function getDeliveryLabel($mode) {
             cursor: default;
         }
 
-        /* ===== OWNER ACTION BUTTONS ===== */
+        /*      OWNER ACTION BUTTONS      */
         .btn-verify {
             background-color: var(--plum);
             color: white;
@@ -793,7 +793,7 @@ function getDeliveryLabel($mode) {
             color: white;
         }
 
-        /* ===== STICKY BOTTOM CTA ===== */
+        /*      STICKY BOTTOM CTA      */
         .sticky-cta {
             position: fixed;
             bottom: 0;
@@ -836,7 +836,7 @@ function getDeliveryLabel($mode) {
         }
         .btn-cta-secondary:hover { background: #f0b8ad; }
 
-        /* ===== DESKTOP LAYOUT ===== */
+        /*      DESKTOP LAYOUT      */
         @media (min-width: 992px) {
             body { padding-bottom: 0; }
             .page-container {
@@ -870,7 +870,7 @@ function getDeliveryLabel($mode) {
             .sidebar-desktop { display: none !important; }
         }
 
-        /* ===== LIGHTBOX ===== */
+        /*      LIGHTBOX      */
         .lightbox-overlay {
             display: none;
             position: fixed;
@@ -1410,10 +1410,10 @@ function getDeliveryLabel($mode) {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ===== GALLERY DATA =====
+//      GALLERY DATA =====
 const galleryImages = <?php echo json_encode(array_column($gallery_images, 'image_path')); ?>;
 
-// ===== MOBILE GALLERY =====
+//      MOBILE GALLERY =====
 let currentMobileIndex = 0;
 
 function setHeroMobile(index) {
@@ -1437,7 +1437,7 @@ function changeHeroMobile(dir) {
     setHeroMobile(newIndex);
 }
 
-// ===== DESKTOP GALLERY =====
+//      DESKTOP GALLERY =====
 let currentDesktopIndex = 0;
 
 function setHeroDesktop(index) {
@@ -1461,7 +1461,7 @@ function changeHeroDesktop(dir) {
     setHeroDesktop(newIndex);
 }
 
-// ===== LIGHTBOX =====
+//      LIGHTBOX =====
 let currentLightboxIndex = 0;
 
 function openLightbox(index) {

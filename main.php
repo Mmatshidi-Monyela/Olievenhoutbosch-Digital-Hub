@@ -65,7 +65,7 @@ mysqli_free_result($listings_result);
             margin: 0;
         }
 
-        /* ===== NAVBAR ===== */
+        /*      NAVBAR      */
         .top-nav {
             background-color: var(--plum) !important;
             height: 56px;
@@ -76,14 +76,13 @@ mysqli_free_result($listings_result);
         }
 
         .nav-inner {
-            max-width: 1400px;
-            margin: 0 auto;
             width: 100%;
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
+            padding: 0 16px;
         }
 
         .nav-brand-section {
@@ -170,7 +169,7 @@ mysqli_free_result($listings_result);
             line-height: 1.2;
         }
 
-        /* ===== CATEGORY BAR ===== */
+        /*      CATEGORY BAR      */
         .cat-bar {
             background: #e9ecef;
             border-bottom: 1px solid #eee;
@@ -253,7 +252,7 @@ mysqli_free_result($listings_result);
 
         .dropdown-overlay.show { display: block; }
 
-        /* ===== MOBILE SEARCH AREA ===== */
+        /*      MOBILE SEARCH AREA      */
         .mobile-search-area {
             background-color: var(--plum);
             padding: clamp(8px, 2vw, 14px) clamp(12px, 3vw, 16px);
@@ -261,7 +260,7 @@ mysqli_free_result($listings_result);
         }
         .mobile-search-area.show { display: block; }
 
-        /* ===== MAIN CONTENT ===== */
+        /*      MAIN CONTENT      */
         .page-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -287,10 +286,6 @@ mysqli_free_result($listings_result);
             font-weight: 600;
             font-size: clamp(0.8rem, 1.5vw, 0.95rem);
         }
-
-        /* ============================================================
-           SIMPLIFIED LISTING CARD DESIGN
-           ============================================================ */
 
         /* ---- Mobile Cards ---- */
         .mobile-listings {
@@ -574,7 +569,7 @@ mysqli_free_result($listings_result);
             flex-shrink: 0;
         }
 
-        /* ===== NO RESULTS ===== */
+        /*      NO RESULTS      */
         .no-results {
             text-align: center;
             padding: clamp(40px, 8vw, 80px) clamp(16px, 3vw, 32px);
@@ -588,7 +583,7 @@ mysqli_free_result($listings_result);
         .no-results h5 { font-size: clamp(1rem, 2.5vw, 1.35rem); }
         .no-results p { font-size: clamp(0.85rem, 1.5vw, 1rem); }
 
-        /* ===== RESPONSIVE ===== */
+        /*      RESPONSIVE      */
         @media (max-width: 991.98px) {
             .nav-search-section { display: none !important; }
             .profile-name, .profile-role { display: none !important; }

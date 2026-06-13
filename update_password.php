@@ -70,13 +70,18 @@ $update_stmt = mysqli_prepare($conn, "UPDATE useraccount SET password = ? WHERE 
 mysqli_stmt_bind_param($update_stmt, "si", $new_hash, $user_id);
 
 if (mysqli_stmt_execute($update_stmt)) {
-    $_SESSION['password_success'] = "Your password has been updated successfully.";
+    // Password changed successfully - log user out and redirect to login
+    session_unset();
+    session_destroy();
+    session_start();
+    $_SESSION['password_success'] = "Password updated successfully! Please log in with your new password.";
+    header("Location: login.php");
+    exit();
 } else {
     $_SESSION['password_error'] = "Failed to update password. Please try again.";
+    header("Location: profile.php#password-settings");
+    exit();
 }
 
 mysqli_stmt_close($update_stmt);
-
-header("Location: profile.php#password-settings");
-exit();
 ?>

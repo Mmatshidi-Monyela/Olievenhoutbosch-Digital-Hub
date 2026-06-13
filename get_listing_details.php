@@ -111,7 +111,7 @@ function getDeliveryLabel($mode) {
 }
 ?>
 
-<!-- ===== HEADER ===== -->
+<!--      HEADER      -->
 <div class="mb-3">
     <div class="d-flex justify-content-between align-items-start">
         <div>
@@ -132,7 +132,7 @@ function getDeliveryLabel($mode) {
     </div>
 </div>
 
-<!-- ===== DESCRIPTION ===== -->
+<!--      DESCRIPTION      -->
 <div class="mb-3">
     <p class="text-secondary mb-2" style="font-size: 0.85rem; line-height: 1.5;">
         <?php echo nl2br(htmlspecialchars($listing['description'])); ?>
@@ -145,7 +145,7 @@ function getDeliveryLabel($mode) {
     </p>
 </div>
 
-<!-- ===== STATS BAR ===== -->
+<!--      STATS BAR      -->
 <div class="d-flex gap-3 mb-3 py-2 px-3 rounded-3" style="background: #f8f6fa;">
     <div class="d-flex align-items-center gap-1">
         <?php if ($avg_rating > 0): ?>
@@ -174,7 +174,7 @@ function getDeliveryLabel($mode) {
     </div>
 </div>
 
-<!-- ===== ALERTS ===== -->
+<!--      ALERTS      -->
 <?php if ($hasKeywordAlert || $hasRatingAlert): ?>
 <div class="mb-3">
     <?php if ($hasKeywordAlert): ?>
@@ -192,7 +192,7 @@ function getDeliveryLabel($mode) {
 </div>
 <?php endif; ?>
 
-<!-- ===== CUSTOMER FEEDBACK ===== -->
+<!--      CUSTOMER FEEDBACK      -->
 <div>
     <h5 class="fw-bold mb-2" style="color: var(--plum); font-size: 0.85rem;">
         Customer Feedback

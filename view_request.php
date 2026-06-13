@@ -30,6 +30,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
 
+        // Notify provider
+        $owner_id = $listing['owner_id'] ?? null;
+        $listing_name = $listing['listing_name'] ?? 'Your listing';
+        if ($owner_id) {
+            $title = "Verification Approved";
+            $message = "Your listing '" . $listing_name . "' has been verified! Customers will now see the verified badge.";
+            $link = "listing_details_owner.php?id=" . $listing_id;
+            $notif_stmt = mysqli_prepare($conn, "INSERT INTO notification (user_id, title, message, type, link) VALUES (?, ?, ?, 'success', ?)");
+            mysqli_stmt_bind_param($notif_stmt, "isss", $owner_id, $title, $message, $link);
+            mysqli_stmt_execute($notif_stmt);
+            mysqli_stmt_close($notif_stmt);
+        }
+
         $_SESSION['admin_msg'] = 'Listing verified successfully.';
         header("Location: admin_requests.php");
         exit();
@@ -41,6 +54,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_bind_param($stmt, 'i', $listing_id);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
+
+        // Notify provider
+        $owner_id = $listing['owner_id'] ?? null;
+        $listing_name = $listing['listing_name'] ?? 'Your listing';
+        if ($owner_id) {
+            $title = "Verification Rejected";
+            $message = "Your verification request for '" . $listing_name . "' was rejected.";
+            if (!empty($reason)) {
+                $message .= " Reason: " . $reason;
+            }
+            $message .= " Please review your listing details and try again.";
+            $link = "listing_details_owner.php?id=" . $listing_id;
+            $notif_stmt = mysqli_prepare($conn, "INSERT INTO notification (user_id, title, message, type, link) VALUES (?, ?, ?, 'danger', ?)");
+            mysqli_stmt_bind_param($notif_stmt, "isss", $owner_id, $title, $message, $link);
+            mysqli_stmt_execute($notif_stmt);
+            mysqli_stmt_close($notif_stmt);
+        }
 
         $_SESSION['admin_msg'] = 'Verification request rejected.' . (!empty($reason) ? ' Reason: ' . $reason : '');
         header("Location: admin_requests.php");
@@ -199,7 +229,7 @@ $admin_first_name = explode(' ', $admin_name)[0];
         }
         body { background-color: var(--light-grey); font-family: 'Inter', sans-serif; color: #333; padding-bottom: 100px; }
 
-        /* ===== NEW NAVBAR ===== */
+        /*      NEW NAVBAR      */
         .navbar-custom {
             background-color: var(--plum);
             height: 56px;
@@ -246,7 +276,7 @@ $admin_first_name = explode(' ', $admin_name)[0];
         }
         .back-link:hover { color: var(--rose-gold); }
 
-        /* ===== CARDS ===== */
+        /*      CARDS      */
         .glass-card {
             background: white;
             border-radius: 16px;
@@ -265,7 +295,7 @@ $admin_first_name = explode(' ', $admin_name)[0];
             padding: 0 20px 20px;
         }
 
-        /* ===== PHOTO HERO ===== */
+        /*      PHOTO HERO      */
         .photo-hero {
             position: relative;
             width: 100%;
@@ -310,7 +340,7 @@ $admin_first_name = explode(' ', $admin_name)[0];
             display: block;
         }
 
-        /* ===== TAG PILLS ===== */
+        /*      TAG PILLS      */
         .tag-pill {
             background: #fdfaf9;
             color: var(--copper);
@@ -329,7 +359,7 @@ $admin_first_name = explode(' ', $admin_name)[0];
             border-color: var(--plum);
         }
 
-        /* ===== STATS GRID (6 blocks) ===== */
+        /*      STATS GRID (6 blocks)      */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -380,7 +410,7 @@ $admin_first_name = explode(' ', $admin_name)[0];
             color: #28a745;
         }
 
-        /* ===== COMMENTS ===== */
+        /*      COMMENTS      */
         .comment-card {
             display: flex;
             margin-bottom: 16px;
@@ -453,7 +483,7 @@ $admin_first_name = explode(' ', $admin_name)[0];
             text-transform: uppercase;
         }
 
-        /* ===== ACTION BUTTONS ===== */
+        /*      ACTION BUTTONS      */
         .action-bar-mobile {
             position: fixed;
             bottom: 0;
@@ -503,7 +533,7 @@ $admin_first_name = explode(' ', $admin_name)[0];
             display: none;
         }
 
-        /* ===== LIGHTBOX ===== */
+        /*      LIGHTBOX      */
         .lightbox-overlay {
             display: none;
             position: fixed;
@@ -570,7 +600,7 @@ $admin_first_name = explode(' ', $admin_name)[0];
             border-radius: 20px;
         }
 
-        /* ===== DESKTOP LAYOUT ===== */
+        /*      DESKTOP LAYOUT      */
         @media (min-width: 992px) {
             body { padding-bottom: 0; }
             .action-bar-mobile { display: none !important; }

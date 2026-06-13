@@ -126,17 +126,14 @@ $phone_link = 'tel:+' . $phone_link_number;
 $phone_display = '';
 if (strlen($digits_only) >= 10) {
     if (strpos($digits_only, '27') === 0) {
-        // +27 XX XXX XXXX
         $phone_display = '+27 ' . substr($digits_only, 2, 2) . ' ' . 
                         substr($digits_only, 4, 3) . ' ' . 
                         substr($digits_only, 7);
     } elseif (strpos($digits_only, '0') === 0) {
-        // 0XX XXX XXXX (local display format)
         $phone_display = '0' . substr($digits_only, 0, 2) . ' ' . 
                         substr($digits_only, 2, 3) . ' ' . 
                         substr($digits_only, 5);
     } else {
-        // No prefix — show as +27 for clarity
         $phone_display = '+27 ' . substr($phone_link_number, 2, 2) . ' ' . 
                         substr($phone_link_number, 4, 3) . ' ' . 
                         substr($phone_link_number, 7);
@@ -265,7 +262,7 @@ function getDeliveryLabel($mode) {
             margin: 0;
         }
 
-        /* ===== NAVBAR ===== */
+        /*      NAVBAR      */
         .navbar-custom {
             background-color: var(--plum);
             height: 56px;
@@ -307,7 +304,7 @@ function getDeliveryLabel($mode) {
         }
         .back-link:hover { color: var(--rose-gold); }
 
-        /* CHANGED: Mobile navbar adjustments */
+        /* CMobile navbar*/
         @media (max-width: 575.98px) {
             .navbar-custom {
                 height: 52px;
@@ -326,7 +323,7 @@ function getDeliveryLabel($mode) {
             }
         }
 
-        /* ===== PHOTO GALLERY ===== */
+        /* PHOTO GALLERY  */
         .photo-hero {
             position: relative;
             width: 100%;
@@ -402,7 +399,7 @@ function getDeliveryLabel($mode) {
             display: block;
         }
 
-        /* ===== INFO CARD ===== */
+        /*INFO CARD */
         .info-card {
             background: white;
             padding: 20px 16px;
@@ -449,11 +446,25 @@ function getDeliveryLabel($mode) {
             font-weight: bold;
             font-size: 0.9rem;
         }
-        .status-unverified { background-color: #eee; color: #666; }
-        .status-pending { background-color: #fff3cd; color: #856404; }
-        .status-verified { background-color: #d4edda; color: #155724; }
+        .status-unverified 
+        { 
+            background-color: #eee; 
+            color: #666; 
+        }
+        
+        .status-pending 
+        { 
+            background-color: #fff3cd; 
+            color: #856404; 
+        }
+        
+        .status-verified 
+        { 
+            background-color: #d4edda; 
+            color: #155724; 
+        }
 
-        /* ===== PRICE ===== */
+        /* PRICE */
         .price-section {
             background: white;
             padding: 0 16px 16px;
@@ -469,7 +480,7 @@ function getDeliveryLabel($mode) {
             margin-top: 2px;
         }
 
-        /* ===== SELLER AVATAR ===== */
+        /*SELLER AVATAR */
         .seller-avatar {
             width: 52px;
             height: 52px;
@@ -484,7 +495,7 @@ function getDeliveryLabel($mode) {
             flex-shrink: 0;
         }
 
-        /* ===== DESCRIPTION ===== */
+        /*DESCRIPTION */
         .desc-section {
             background: white;
             margin: 8px 0;
@@ -497,7 +508,7 @@ function getDeliveryLabel($mode) {
             word-break: break-word;
         }
 
-        /* ===== TAG PILLS ===== */
+        /* TAG PILLS*/
         .tag-pill {
             background: #fdfaf9;
             color: var(--copper);
@@ -522,7 +533,7 @@ function getDeliveryLabel($mode) {
             border-color: #f5e6d3;
         }
 
-        /* ===== COMMENTS / FEEDBACK SECTION ===== */
+        /* COMMENTS / FEEDBACK SECTION */
         .comments-section {
             background: white;
             margin: 8px 0;
@@ -705,7 +716,7 @@ function getDeliveryLabel($mode) {
             font-size: 0.8rem;
         }
 
-        /* ===== OWNER READ-ONLY COMMENT STYLES (matching listing_details_owner.php) ===== */
+        /*      OWNER READ-ONLY COMMENT STYLES (matching listing_details_owner.php)      */
         .owner-comment-box {
             border-left: 4px solid var(--rose-gold);
             padding-left: 15px;
@@ -739,7 +750,7 @@ function getDeliveryLabel($mode) {
             margin-bottom: 20px;
         }
 
-        /* ===== STICKY BOTTOM CTA ===== */
+        /*      STICKY BOTTOM CTA      */
         .sticky-cta {
             position: fixed;
             bottom: 0;
@@ -782,7 +793,7 @@ function getDeliveryLabel($mode) {
         }
         .btn-cta-secondary:hover { background: #f0b8ad; }
 
-        /* ===== MOBILE BUBBLE CARDS ===== */
+        /*      MOBILE BUBBLE CARDS      */
         .mobile-bubble-card {
             background: white;
             border-radius: 16px;
@@ -818,7 +829,7 @@ function getDeliveryLabel($mode) {
             margin-bottom: 8px;
         }
 
-        /* ===== DESKTOP LAYOUT ===== */
+        /*      DESKTOP LAYOUT      */
         @media (min-width: 992px) {
             body { padding-bottom: 0; }
             .page-container {
@@ -882,7 +893,7 @@ function getDeliveryLabel($mode) {
             .sidebar-desktop { display: none !important; }
         }
 
-        /* ===== LIGHTBOX ===== */
+        /*      LIGHTBOX      */
         .lightbox-overlay {
             display: none;
             position: fixed;
@@ -1445,10 +1456,10 @@ function getDeliveryLabel($mode) {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ===== GALLERY DATA =====
+//      GALLERY DATA =====
 const galleryImages = <?php echo json_encode(array_column($gallery_images, 'image_path')); ?>;
 
-// ===== MOBILE GALLERY =====
+//      MOBILE GALLERY =====
 let currentMobileIndex = 0;
 
 function setHeroMobile(index) {
@@ -1466,7 +1477,7 @@ function setHeroMobile(index) {
 }
 
 
-// ===== DESKTOP GALLERY =====
+//      DESKTOP GALLERY =====
 let currentDesktopIndex = 0;
 
 function setHeroDesktop(index) {
@@ -1484,7 +1495,7 @@ function setHeroDesktop(index) {
 }
 
 
-// ===== LIGHTBOX =====
+//      LIGHTBOX =====
 let currentLightboxIndex = 0;
 
 function openLightbox(index) {
@@ -1527,7 +1538,7 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') changeImage(1);
 });
 
-// ===== COMMENT IMAGE PREVIEW =====
+//      COMMENT IMAGE PREVIEW =====
 function previewImage(input) {
     var preview = document.getElementById('imagePreview') || document.getElementById('imagePreviewMobile');
     if (input.files && input.files[0]) {
@@ -1540,7 +1551,7 @@ function previewImage(input) {
     }
 }
 
-// ===== DELETE COMMENT =====
+//      DELETE COMMENT =====
 function deleteComment(commentId) {
     if (!confirm('Are you sure you want to delete your comment? This cannot be undone.')) {
         return;

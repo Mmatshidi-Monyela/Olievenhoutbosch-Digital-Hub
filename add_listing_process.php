@@ -14,9 +14,7 @@ if ($user_id == 0) {
     exit();
 }
 
-// ============================================
-// SANITIZE INPUTS
-// ============================================
+
 $listing_name   = trim($_POST['listing_name'] ?? '');
 $listing_type   = $_POST['listing_type'] ?? 'service';
 $category       = $_POST['category'] ?? '';
@@ -42,9 +40,7 @@ if (isset($_POST['service_extensions']) && is_array($_POST['service_extensions']
 }
 $service_extensions_str = !empty($service_extensions) ? implode(',', $service_extensions) : null;
 
-// ============================================
-// VALIDATION (context-aware based on listing_type)
-// ============================================
+
 $errors = [];
 if (strlen($listing_name) < 3)  $errors[] = "Listing name too short (min 3 characters).";
 if (strlen($description) < 10)  $errors[] = "Description too short (min 10 characters).";
@@ -89,9 +85,6 @@ if ($errors) {
     exit();
 }
 
-// ============================================
-// HANDLE IMAGE UPLOADS
-// ============================================
 $uploaded = [];
 $max = 5;
 $max_size = 2 * 1024 * 1024;
@@ -124,9 +117,7 @@ if (!empty($_FILES['work_photos']) && is_array($_FILES['work_photos']['name'])) 
 
 $image_path = $uploaded[0] ?? 'uploads/listings/default_listing.jpg';
 
-// ============================================
-// INSERT LISTING (with product_type column)
-// ============================================
+
 $stmt = mysqli_prepare($conn, "INSERT INTO listing (
     user_id, listing_name, category, listing_type, service_type, product_type, 
     extension, service_extensions, delivery_mode, street_address, 
@@ -139,8 +130,8 @@ mysqli_stmt_bind_param($stmt, "isssssssssssss",
     $listing_name,
     $category,
     $listing_type,
-    $service_type,      // varchar(50) - from dropdown
-    $product_type,      // varchar(50) - from text input (NEW COLUMN)
+    $service_type,     
+    $product_type,      
     $extension,
     $service_extensions_str,
     $delivery_mode,

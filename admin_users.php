@@ -307,7 +307,7 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    // ===== SEARCH / FILTER =====
+    //      SEARCH / FILTER =====
     function filterTable() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const rows = document.querySelectorAll('#tableBody tr');
@@ -331,7 +331,7 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
 
     document.getElementById('searchInput').addEventListener('input', filterTable);
 
-    // ===== SORTING =====
+    //      SORTING =====
     let sortState = { col: -1, dir: 'asc' };
 
     function sortTable(colIndex, type) {
@@ -380,7 +380,7 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    // ===== ACTION BUTTONS =====
+    //      ACTION BUTTONS =====
     function toggleUser(id, action) {
         const msg = action === 'suspend' 
             ? 'Suspend this user? They will not be able to log in or use the platform.' 
