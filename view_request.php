@@ -19,7 +19,7 @@ if ($listing_id <= 0 || !$conn) {
 }
 
 // ============================================
-// FETCH LISTING DATA
+// FETCH LISTING DATA (MUST BE BEFORE POST HANDLERS)
 // ============================================
 $stmt = mysqli_prepare($conn, "
     SELECT l.*, u.full_name as owner_name, u.user_id as owner_id, u.created_at as member_since
@@ -95,7 +95,10 @@ $avg_rating = $rated_count > 0 ? round($total_rating / $rated_count, 1) : 0;
 $rating_alert = ($avg_rating > 0 && $avg_rating < 3.5);
 $keyword_alert = ($keyword_alert_count > 0);
 
-$all_extensions = [$listing['extension']];
+$all_extensions = [];
+if (!empty($listing['extension'])) {
+    $all_extensions[] = $listing['extension'];
+}
 if (!empty($listing['service_extensions'])) {
     $additional = explode(',', $listing['service_extensions']);
     $all_extensions = array_merge($all_extensions, $additional);
@@ -115,41 +118,7 @@ $type_label = 'Service';
 if ($listing['listing_type'] == 'product') $type_label = 'Goods';
 if ($listing['listing_type'] == 'both') $type_label = 'Service & Goods';
 
-function getInitials($name) {
-    $parts = explode(' ', $name);
-    $initials = '';
-    foreach ($parts as $part) {
-        $initials .= strtoupper(substr($part, 0, 1));
-    }
-    return substr($initials, 0, 2);
-}
-
-function timeAgo($datetime) {
-    $time = strtotime($datetime);
-    $now = time();
-    $diff = $now - $time;
-    if ($diff < 60) return 'Just now';
-    if ($diff < 3600) return floor($diff / 60) . 'm ago';
-    if ($diff < 86400) return floor($diff / 3600) . 'h ago';
-    if ($diff < 604800) return floor($diff / 86400) . 'd ago';
-    return date('M j', $time);
-}
-
-function getDeliveryLabel($mode) {
-    $labels = [
-        'door_to_door' => 'Door-to-Door',
-        'customer_comes_to_me' => 'Customer Comes to Me',
-        'both_service' => 'Both (Door-to-Door + On-site)',
-        'both_product' => 'Both (Delivery + Pickup)',
-        'i_deliver' => 'I Deliver',
-        'customer_pickup' => 'Customer Pickup'
-    ];
-    return $labels[$mode] ?? $mode;
-}
-
-$admin_name = $_SESSION['full_name'] ?? 'Administrator';
-$admin_first_name = explode(' ', $admin_name)[0];
-?>
+// ============================================
 // HANDLE APPROVE / REJECT ACTIONS
 // ============================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -210,6 +179,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ============================================
+// HELPER FUNCTIONS
+// ============================================
+function getInitials($name) {
+    $parts = explode(' ', trim($name));
+    $initials = '';
+    foreach ($parts as $part) {
+        if (!empty($part)) {
+            $initials .= strtoupper(substr($part, 0, 1));
+        }
+    }
+    return substr($initials, 0, 2) ?: '?';
+}
+
+function timeAgo($datetime) {
+    $time = strtotime($datetime);
+    $now = time();
+    $diff = $now - $time;
+    if ($diff < 60) return 'Just now';
+    if ($diff < 3600) return floor($diff / 60) . 'm ago';
+    if ($diff < 86400) return floor($diff / 3600) . 'h ago';
+    if ($diff < 604800) return floor($diff / 86400) . 'd ago';
+    return date('M j', $time);
+}
+
+function getDeliveryLabel($mode) {
+    $labels = [
+        'door_to_door' => 'Door-to-Door',
+        'customer_comes_to_me' => 'Customer Comes to Me',
+        'both_service' => 'Both (Door-to-Door + On-site)',
+        'both_product' => 'Both (Delivery + Pickup)',
+        'i_deliver' => 'I Deliver',
+        'customer_pickup' => 'Customer Pickup'
+    ];
+    return $labels[$mode] ?? ucwords(str_replace('_', ' ', $mode));
+}
+
+$admin_name = $_SESSION['full_name'] ?? 'Administrator';
+$admin_first_name = explode(' ', $admin_name)[0];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -510,6 +518,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             gap: 6px;
             flex: 1;
             justify-content: center;
+            cursor: pointer;
         }
         .btn-approve:hover { background: #218838; }
         .btn-reject {
@@ -525,6 +534,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             gap: 6px;
             flex: 1;
             justify-content: center;
+            cursor: pointer;
         }
         .btn-reject:hover { background: #c82333; }
 
@@ -685,7 +695,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <div class="col-md-6">
                             <div class="text-muted small mb-1">Category</div>
-                            <div><?php echo htmlspecialchars($listing['category']); ?></div>
+                            <div><?php echo htmlspecialchars($listing['category'] ?? 'N/A'); ?></div>
                         </div>
                         <div class="col-md-6">
                             <div class="text-muted small mb-1">Type</div>
@@ -699,25 +709,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="text-muted small mb-1">Product Type</div>
                             <div><?php echo !empty($listing['product_type']) ? htmlspecialchars($listing['product_type']) : '<span class="text-muted">N/A</span>'; ?></div>
                         </div>
+                        <?php if (!empty($all_extensions)): ?>
                         <div class="col-12">
                             <div class="text-muted small mb-1">Extensions</div>
                             <div>
                                 <?php foreach ($all_extensions as $idx => $ext): ?>
-                                    <span class="tag-pill <?php echo $idx === 0 ? 'primary' : ''; ?>">Ext <?php echo htmlspecialchars(trim($ext)); ?></span>
+                                    <?php if (!empty(trim($ext))): ?>
+                                    <span class="tag-pill <?php echo $idx === 0 ? 'primary' : ''; ?>"><?php echo htmlspecialchars(trim($ext)); ?></span>
+                                    <?php endif; ?>
                                 <?php endforeach; ?>
                             </div>
                         </div>
+                        <?php endif; ?>
                         <div class="col-12">
                             <div class="text-muted small mb-1">Address</div>
                             <div><?php echo !empty($listing['street_address']) ? htmlspecialchars($listing['street_address']) : '<span class="text-muted">Mobile service</span>'; ?></div>
                         </div>
                         <div class="col-12">
                             <div class="text-muted small mb-1">Description</div>
-                            <div style="line-height: 1.7; color: #444;"><?php echo nl2br(htmlspecialchars($listing['description'])); ?></div>
+                            <div style="line-height: 1.7; color: #444;"><?php echo nl2br(htmlspecialchars($listing['description'] ?? '')); ?></div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Delivery & Payment Card -->
+            <?php if (!empty($delivery_modes) || !empty($payment_options)): ?>
+            <div class="glass-card">
+                <div class="card-header-custom">Delivery & Payment</div>
+                <div class="card-body-custom">
+                    <div class="row g-3">
+                        <?php if (!empty($delivery_modes)): ?>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-1">Delivery Modes</div>
+                            <div>
+                                <?php foreach ($delivery_modes as $mode): ?>
+                                    <span class="tag-pill"><?php echo htmlspecialchars(getDeliveryLabel($mode)); ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (!empty($payment_options)): ?>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-1">Payment Options</div>
+                            <div>
+                                <?php foreach ($payment_options as $opt): ?>
+                                    <span class="tag-pill"><?php echo htmlspecialchars(ucwords($opt)); ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- Comments / Reviews Card -->
             <div class="glass-card">
@@ -767,7 +812,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <?php if(!empty($comment['image_path'])): ?>
                                     <img src="<?php echo htmlspecialchars($comment['image_path']); ?>" class="comment-image" alt="Comment image">
                                 <?php endif; ?>
-                                <p class="comment-text"><?php echo htmlspecialchars($comment['comment_text']); ?></p>
+                                <p class="comment-text"><?php echo htmlspecialchars($comment['comment_text'] ?? ''); ?></p>
                             </div>
                         </div>
                         <?php endforeach; ?>
