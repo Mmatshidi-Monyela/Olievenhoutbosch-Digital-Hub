@@ -237,11 +237,11 @@ $admin_first_name = explode(' ', $admin_name)[0];
         }
         body { background-color: var(--light-grey); font-family: 'Inter', sans-serif; color: #333; padding-bottom: 100px; }
 
-        /*      NEW NAVBAR      */
+        /*      NAVBAR (matches listing_details_owner.php)      */
         .navbar-custom {
             background-color: var(--plum);
             height: 56px;
-            padding: 0 16px;
+            padding: 0;
             display: flex;
             align-items: center;
             position: sticky;
@@ -250,19 +250,12 @@ $admin_first_name = explode(' ', $admin_name)[0];
             width: 100%;
             border-bottom: 3px solid var(--rose-gold);
         }
-        .navbar-inner {
-            max-width: 1100px;
-            margin: 0 auto;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
         .navbar-brand {
             display: flex;
             align-items: center;
             gap: 8px;
             text-decoration: none;
+            min-width: 0;
         }
         .brand-text {
             font-size: 1rem;
@@ -281,8 +274,28 @@ $admin_first_name = explode(' ', $admin_name)[0];
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            flex-shrink: 0;
         }
         .back-link:hover { color: var(--rose-gold); }
+
+        @media (max-width: 575.98px) {
+            .navbar-custom {
+                height: 52px;
+                padding: 0 12px;
+            }
+            .brand-text {
+                font-size: 0.85rem;
+                max-width: 160px;
+            }
+            .back-link {
+                font-size: 1.1rem;
+                padding: 8px;
+                margin-right: -8px;
+            }
+            .back-link span {
+                display: none;
+            }
+        }
 
         /*      CARDS      */
         .glass-card {
@@ -637,25 +650,25 @@ $admin_first_name = explode(' ', $admin_name)[0];
 </head>
 <body>
 
-<!-- Navbar -->
+<!-- Navbar (matches listing_details_owner.php) -->
 <nav class="navbar-custom">
-    <div class="navbar-inner">
+    <div class="container-fluid d-flex align-items-center justify-content-between px-3 px-lg-4">
+        <!-- LEFT: Logo + Brand -->
         <a href="admin_dashboard.php" class="navbar-brand">
             <img src="images/logo.png" width="28" height="28" alt="logo" style="flex-shrink:0;">
-            <span class="brand-text">Olievenhoutbosch Digital Hub</span>
+            <span class="brand-text d-sm-none">Olievenhoutbosch DH</span>
+            <span class="brand-text d-none d-sm-inline">Olievenhoutbosch Digital Hub</span>
         </a>
+
+        <!-- RIGHT: Back button -->
         <a href="admin_requests.php" class="back-link">
-            <i class="bi bi-arrow-left"></i> Back
+            <i class="bi bi-arrow-left"></i>
+            <span class="d-none d-sm-inline">Back</span>
         </a>
     </div>
 </nav>
 
 <div class="container py-4">
-
-    <!-- Page Header -->
-    <div class="mb-4">
-        <h4 class="fw-bold mb-0" style="color: var(--plum);">Verification Review</h4>
-    </div>
 
     <div class="row">
         <!-- LEFT COLUMN -->
