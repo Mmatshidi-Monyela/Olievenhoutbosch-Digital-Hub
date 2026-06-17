@@ -1,4 +1,3 @@
-// sw.js — Service Worker for Olievenhoutbosch Digital Hub
 const CACHE_NAME = 'olieven-hub-v1';
 
 const LOCAL_ASSETS = [

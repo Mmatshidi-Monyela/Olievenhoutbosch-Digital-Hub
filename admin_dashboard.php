@@ -1,9 +1,7 @@
 <?php
 session_start();
 
-// ============================================
-// ADMIN AUTHENTICATION CHECK
-// ============================================
+
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: login.php");
     exit();
@@ -14,17 +12,13 @@ $admin_name = $_SESSION['full_name'] ?? 'Administrator';
 $admin_first_name = explode(' ', $admin_name)[0];
 $admin_avatar = strtoupper(substr($admin_name, 0, 1));
 
-// ============================================
-// DATABASE CONNECTION
-// ============================================
+
 $conn = null;
 if (file_exists('includes/db_connect.php')) {
     include 'includes/db_connect.php';
 }
 
-// ============================================
-// FETCH STATS FROM DATABASE
-// ============================================
+
 $totalListings = 0;
 $activeUsers = 0;
 $pendingVerifications = 0;
@@ -40,9 +34,7 @@ if ($conn) {
     if ($pendRes) $pendingVerifications = mysqli_fetch_assoc($pendRes)['c'] ?? 0;
 }
 
-// ============================================
-// FETCH EXTENSIONS DISTRIBUTION — ALL EXTENSIONS
-// ============================================
+
 $extensions = [];
 if ($conn) {
     $extRes = mysqli_query($conn, 'SELECT extension, COUNT(*) as cnt FROM useraccount WHERE extension IS NOT NULL AND extension != "" GROUP BY extension ORDER BY cnt DESC');
@@ -66,9 +58,7 @@ if ($conn) {
     }
 }
 
-// ============================================
-// FETCH TOP RATED LISTINGS — CALCULATED FROM comment TABLE
-// ============================================
+
 $topListings = [];
 if ($conn) {
     // Calculate true average from comment table, only services with actual ratings
@@ -97,9 +87,7 @@ if ($conn) {
     }
 }
 
-// ============================================
-// FETCH RECENT PENDING REQUESTS
-// ============================================
+
 $recentRequests = [];
 if ($conn) {
     $reqRes = mysqli_query($conn, "SELECT listing_name, created_at FROM listing WHERE verification_status = 'Pending' ORDER BY created_at DESC LIMIT 3");
@@ -111,9 +99,7 @@ if ($conn) {
     }
 }
 
-// ============================================
-// ALERT COUNTS — calculated from actual DB data
-// ============================================
+
 $keywordAlertCount = 0;
 $ratingAlertCount = 0;
 

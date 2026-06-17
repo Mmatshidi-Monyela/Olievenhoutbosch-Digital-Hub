@@ -57,16 +57,11 @@ $categories = [
     'Personal Care'
 ];
 
-// Hardcoded extensions — MATCHING ADD LISTING
+// Hardcoded extensions 
 $extensions = [
     '4', '13', '15','19', '20',
     '21', '22', '23', '24', '25', '26', '36'
 ];
-
-$success_msg = $_SESSION['success_msg'] ?? '';
-unset($_SESSION['success_msg']);
-$error_msg = $_SESSION['error_msg'] ?? '';
-unset($_SESSION['error_msg']);
 ?>
 
 <!DOCTYPE html>
@@ -526,12 +521,7 @@ unset($_SESSION['error_msg']);
     <div class="form-card">
         <h1 class="page-title">Update Listing</h1>
 
-        <?php if ($success_msg): ?>
-            <div class="alert alert-success"><?php echo htmlspecialchars($success_msg); ?></div>
-        <?php endif; ?>
-        <?php if ($error_msg): ?>
-            <div class="alert alert-danger"><?php echo htmlspecialchars($error_msg); ?></div>
-        <?php endif; ?>
+        <!-- Messages removed - now shown on listing_details_owner.php after redirect -->
 
         <form action="update_listing.php" method="POST" enctype="multipart/form-data" id="listingForm">
             <input type="hidden" name="listing_id" value="<?php echo $listing_id; ?>">

@@ -855,7 +855,6 @@ mysqli_free_result($listings_result);
                 'typeLabel' => $type_label,
                 'deliveryIcon' => $delivery_icon,
                 'deliveryLabel' => $delivery_label,
-                // Owner info intentionally hidden from listing cards
             ];
         }, $db_listings)); ?>;
 
@@ -928,7 +927,7 @@ mysqli_free_result($listings_result);
                 `;
                 mobileContainer.appendChild(mobileCard);
 
-                // Desktop card - SIMPLIFIED
+                // Desktop card 
                 const desktopCard = document.createElement('a');
                 desktopCard.href = 'view_service.php?id=' + item.id;
                 desktopCard.className = 'listing-card-desktop';

@@ -599,7 +599,7 @@ $extensions = [
 <script>
 const allExtensions = <?php echo json_encode($extensions); ?>;
 
-// Service types mapped by category (matching your screenshots)
+
 const serviceTypesByCategory = {
     'Construction & Maintenance': ['Painting', 'Plumbing', 'Tiling', 'Window Glazing'],
     'Transport': ['Bakkie-for-hire', 'School Transport', 'Work Transport'],

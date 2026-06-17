@@ -2,10 +2,7 @@
 session_start();
 /**@var mysqli $conn */ 
 
-// ============================================
-// BUSINESS DETAILS OWNER (Manage Listing)
-// Shows verification status + Request Verification button + DELETE LISTING
-// ============================================
+
 
 $listing_id = intval($_GET['id'] ?? 0);
 $user_id = $_SESSION['user_id'] ?? 0;
@@ -82,10 +79,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_verification'
 
 // Handle DELETE listing
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_listing'])) {
-    // TODO: DELETE FROM Listing WHERE listing_id = ? AND user_id = ?
-    // TODO: DELETE FROM comments WHERE listing_id = ?
-    // TODO: DELETE FROM verification_requests WHERE listing_id = ?
-    $_SESSION['dashboard_message'] = 'Your listing has been permanently deleted.';
+    if (file_exists('includes/db_connect.php')) {
+        include 'includes/db_connect.php';
+    }
+
+    if ($conn) {
+        // Start transaction for safe cascading delete
+        mysqli_begin_transaction($conn);
+        try {
+            // Delete all comments for this listing
+            $stmt1 = mysqli_prepare($conn, "DELETE FROM comment WHERE listing_id = ?");
+            mysqli_stmt_bind_param($stmt1, 'i', $listing_id);
+            mysqli_stmt_execute($stmt1);
+            mysqli_stmt_close($stmt1);
+
+            // Delete all listing images
+            $stmt2 = mysqli_prepare($conn, "DELETE FROM listing_images WHERE listing_id = ?");
+            mysqli_stmt_bind_param($stmt2, 'i', $listing_id);
+            mysqli_stmt_execute($stmt2);
+            mysqli_stmt_close($stmt2);
+
+            // Delete the listing (only if owned by current user)
+            $stmt3 = mysqli_prepare($conn, "DELETE FROM listing WHERE listing_id = ? AND user_id = ?");
+            mysqli_stmt_bind_param($stmt3, 'ii', $listing_id, $user_id);
+            mysqli_stmt_execute($stmt3);
+            mysqli_stmt_close($stmt3);
+
+            mysqli_commit($conn);
+            $_SESSION['dashboard_message'] = 'Your listing has been permanently deleted.';
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            $_SESSION['dashboard_message'] = 'Delete failed. Please try again.';
+        }
+    }
+
     header('Location: listing_dashboard.php');
     exit;
 }

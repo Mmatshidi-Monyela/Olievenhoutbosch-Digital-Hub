@@ -41,9 +41,6 @@ if (!$existing_listing) {
     exit();
 }
 
-// ============================================
-// SANITIZE INPUTS
-// ============================================
 $listing_name   = trim($_POST['listing_name'] ?? '');
 $listing_type   = $_POST['listing_type'] ?? 'service';
 $category       = $_POST['category'] ?? '';
@@ -69,9 +66,6 @@ if (isset($_POST['service_extensions']) && is_array($_POST['service_extensions']
 }
 $service_extensions_str = !empty($service_extensions) ? implode(',', $service_extensions) : null;
 
-// ============================================
-// VALIDATION
-// ============================================
 $errors = [];
 if (strlen($listing_name) < 3)  $errors[] = "Listing name too short (min 3 characters).";
 if (strlen($description) < 10)  $errors[] = "Description too short (min 10 characters).";
@@ -105,9 +99,68 @@ if ($errors) {
     exit();
 }
 
-// ============================================
-// HANDLE NEW IMAGE UPLOADS
-// ============================================
+
+if (!empty($_POST['photos_to_delete'])) {
+    $photos_to_delete = array_filter(array_map('intval', explode(',', $_POST['photos_to_delete'])));
+
+    foreach ($photos_to_delete as $image_id) {
+        // Verify image belongs to this listing before deleting
+        $verify_stmt = mysqli_prepare($conn, "SELECT image_path FROM listing_images WHERE image_id = ? AND listing_id = ?");
+        mysqli_stmt_bind_param($verify_stmt, "ii", $image_id, $listing_id);
+        mysqli_stmt_execute($verify_stmt);
+        $verify_result = mysqli_stmt_get_result($verify_stmt);
+        $img_data = mysqli_fetch_assoc($verify_result);
+        mysqli_stmt_close($verify_stmt);
+
+        if ($img_data) {
+            // Delete file from filesystem
+            if (!empty($img_data['image_path']) && file_exists($img_data['image_path']) && $img_data['image_path'] !== 'uploads/listings/default_listing.jpg') {
+                unlink($img_data['image_path']);
+            }
+            // Delete from database
+            $del_img_stmt = mysqli_prepare($conn, "DELETE FROM listing_images WHERE image_id = ? AND listing_id = ?");
+            mysqli_stmt_bind_param($del_img_stmt, "ii", $image_id, $listing_id);
+            mysqli_stmt_execute($del_img_stmt);
+            mysqli_stmt_close($del_img_stmt);
+        }
+    }
+
+    // Update main image_path if the deleted photo was the primary one
+    $check_main = mysqli_prepare($conn, "SELECT image_path FROM listing WHERE listing_id = ?");
+    mysqli_stmt_bind_param($check_main, "i", $listing_id);
+    mysqli_stmt_execute($check_main);
+    $main_result = mysqli_stmt_get_result($check_main);
+    $main_data = mysqli_fetch_assoc($main_result);
+    mysqli_stmt_close($check_main);
+
+    if (!empty($main_data['image_path'])) {
+        $main_path = $main_data['image_path'];
+        $check_exists = mysqli_prepare($conn, "SELECT image_id FROM listing_images WHERE image_path = ? AND listing_id = ?");
+        mysqli_stmt_bind_param($check_exists, "si", $main_path, $listing_id);
+        mysqli_stmt_execute($check_exists);
+        $exists_result = mysqli_stmt_get_result($check_exists);
+        $still_exists = mysqli_fetch_assoc($exists_result);
+        mysqli_stmt_close($check_exists);
+
+        if (!$still_exists) {
+            // Main image was deleted, pick a new one
+            $new_img_stmt = mysqli_prepare($conn, "SELECT image_path FROM listing_images WHERE listing_id = ? ORDER BY uploaded_at ASC LIMIT 1");
+            mysqli_stmt_bind_param($new_img_stmt, "i", $listing_id);
+            mysqli_stmt_execute($new_img_stmt);
+            $new_result = mysqli_stmt_get_result($new_img_stmt);
+            $new_img = mysqli_fetch_assoc($new_result);
+            mysqli_stmt_close($new_img_stmt);
+
+            $new_path = $new_img['image_path'] ?? 'uploads/listings/default_listing.jpg';
+            $upd_main = mysqli_prepare($conn, "UPDATE listing SET image_path = ? WHERE listing_id = ?");
+            mysqli_stmt_bind_param($upd_main, "si", $new_path, $listing_id);
+            mysqli_stmt_execute($upd_main);
+            mysqli_stmt_close($upd_main);
+        }
+    }
+}
+
+
 $uploaded = [];
 $max_total = 5;
 $max_size = 2 * 1024 * 1024;
@@ -167,9 +220,7 @@ if (!empty($uploaded)) {
     }
 }
 
-// ============================================
-// UPDATE LISTING
-// ============================================
+
 $update_stmt = mysqli_prepare($conn, "UPDATE listing SET 
     listing_name = ?, 
     listing_type = ?,
@@ -204,11 +255,11 @@ mysqli_stmt_bind_param($update_stmt, "sssssssssssssi",
 
 if (mysqli_stmt_execute($update_stmt)) {
     $photo_msg = count($uploaded) > 0 ? " " . count($uploaded) . " new photo(s) added." : "";
-    $_SESSION['success_msg'] = 'Listing updated successfully!' . $photo_msg;
+    $_SESSION['update_success_msg'] = 'Listing updated successfully!' . $photo_msg;
     header('Location: listing_details_owner.php?id=' . $listing_id);
 } else {
-    $_SESSION['error_msg'] = 'Failed to update listing. Please try again.';
-    header('Location: update_listing.php?id=' . $listing_id);
+    $_SESSION['update_error_msg'] = 'Failed to update listing. Please try again.';
+    header('Location: edit_listing.php?id=' . $listing_id);
 }
 
 mysqli_stmt_close($update_stmt);

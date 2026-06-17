@@ -9,8 +9,6 @@
     <style>
         :root {
             --plum: #230344;
-            --rose-gold: #c99383;
-            --blush: #d8b2a7;
             --light-grey: #e6e6e6;
         }
         body {
@@ -47,54 +45,20 @@
         .btn-plum:hover {
             background-color: #3a0d5e !important;
         }
-        
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="offline-card">
-        <div class="offline-icon"><i class="bi bi-wifi-off" style="font-size: 3.5rem; color: var(--plum);"></i></div>
+        <div class="offline-icon">
+            <i class="bi bi-wifi-off" style="font-size: 3.5rem; color: var(--plum);"></i>
+        </div>
         <h3 class="fw-bold mb-2" style="color: var(--plum);">You're Offline</h3>
         <p class="text-muted mb-4">
-            Your internet connection appears to be down. Pages you visited recently are still available below.
+            Your internet connection appears to be down. Pages you visited recently are still available.
         </p>
-        <button class="btn btn-plum mt-4" onclick="window.location.reload()">
+        <button class="btn btn-plum" onclick="window.location.reload()">
             Try Again
         </button>
     </div>
-
-    <script>
-        const CACHE_NAME = 'olieven-hub-v1';
-
-        if ('caches' in window) {
-            caches.open(CACHE_NAME)
-                .then(cache => cache.keys())
-                .then(requests => {
-                    const list = document.getElementById('cachedList');
-                    const pages = requests
-                        .filter(req => {
-                            const url = new URL(req.url);
-                            return url.pathname.includes('.php') && !url.pathname.includes('offline');
-                        })
-                        .map(req => {
-                            const url = new URL(req.url);
-                            let name = url.pathname.replace('/', '').replace('.php', '');
-                            name = name === 'index' ? 'Home' : name.charAt(0).toUpperCase() + name.slice(1);
-                            return `<a href="${url.pathname}${url.search}">${name}</a>`;
-                        });
-
-                    list.innerHTML = pages.length > 0 
-                        ? pages.join('') 
-                        : '<p class="text-muted small">No pages cached yet. Visit some pages while online first.</p>';
-                })
-                .catch(() => {
-                    document.getElementById('cachedList').innerHTML = 
-                        '<p class="text-muted small">Unable to load cached pages.</p>';
-                });
-        } else {
-            document.getElementById('cachedList').innerHTML = 
-                '<p class="text-muted small">Your browser does not support offline caching.</p>';
-        }
-    </script>
 </body>
 </html>

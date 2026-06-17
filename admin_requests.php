@@ -1,9 +1,6 @@
 <?php
 session_start();
 
-// ============================================
-// ADMIN AUTHENTICATION CHECK
-// ============================================
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Admin') {
     header("Location: login.php");
     exit();
@@ -14,17 +11,14 @@ $admin_name = $_SESSION['full_name'] ?? 'Administrator';
 $admin_first_name = explode(' ', $admin_name)[0];
 $admin_avatar = strtoupper(substr($admin_name, 0, 1));
 
-// ============================================
 // DATABASE CONNECTION
-// ============================================
+
 $conn = null;
 if (file_exists('includes/db_connect.php')) {
     include 'includes/db_connect.php';
 }
 
-// ============================================
-// FETCH PENDING VERIFICATIONS FROM DATABASE
-// ============================================
+
 $pendingRequests = [];
 
 if ($conn) {

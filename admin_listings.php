@@ -496,7 +496,7 @@ $admin_avatar = strtoupper(substr($admin_name, 0, 1));
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    //      ACTION BUTTONS =====
+    //      ACTION BUTTONS 
     function viewListing(id) {
         const modalEl = document.getElementById('listingModal');
         const modalBody = document.getElementById('listingModalBody');
